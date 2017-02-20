@@ -29,7 +29,13 @@ class Slice:
             boomAreaSum = boomAreaSum + self.booms[i].boomArea
         self.yBar = yBar/boomAreaSum
         
-    def calculateIxx():
+    def calculateIxx(self,IxxFloor):
+        Ixx = IxxFloor
+        for i in xrange(len(self.booms)):
+            Ixx = Ixx + self.booms[i].boomArea*self.booms[i].y**2
         
-    def calculateIyy():
+    def calculateIyy(self,IyyFloor):
+        Iyy = IyyFloor
+        for i in xrange(len(self.booms)):
+            Iyy = Iyy + self.booms[i].boomArea*self.booms[i].y**2
         

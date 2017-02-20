@@ -18,5 +18,5 @@ class Boom:
         self.y=y
         self.z=z
         
-    def calculateBoomArea(self,Astringer,tDb,sigmainext,sigmaithis,sigmaiprevious):
-        self.boomArea = Astringer + tDb/6.*(2+sigmainext/sigmaithis) + tDb/6.*(2+sigmaiprevious/sigmaithis)
+    def calculateBoomArea(self,Astringer,sigmainext,sigmaithis,sigmaiprevious):
+        self.boomArea = Astringer + Inputs.tsSkin/6.*(2.+sigmainext/sigmaithis) + Inputs.tsSkin/6.*(2.+sigmaiprevious/sigmaithis)

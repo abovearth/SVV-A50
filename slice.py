@@ -4,9 +4,10 @@ Created on Mon Feb 20 09:48:10 2017
 
 @author: Roeland
 """
-import Boom
-import Math
-import Inputs
+import boom
+import math
+import inputs
+Inputs = inputs.Inputs()
 
 class Slice:
     zDistance = 0.
@@ -18,10 +19,10 @@ class Slice:
     
     def __init__(self,z):
         self.zDistance = z
-        for i in xrange(Inputs.ns): #Discretization in Booms
-            x = Inputs.R*Math.cos(i*Inputs.ns/360)
-            y = Inputs.R*Math.sin(i*Inputs.ns/360)
-            self.booms.append(Boom(x,y,z))
+        for i in xrange(Inputs.ns): #Discretization in booms
+            x = Inputs.R*math.cos(i*Inputs.ns/360)
+            y = Inputs.R*math.sin(i*Inputs.ns/360)
+            self.booms.append(boom.Boom(x,y,z))
             
     def calculateYBar(self):
         yBar = 0.

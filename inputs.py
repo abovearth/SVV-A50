@@ -7,20 +7,21 @@ Created on Mon Feb 20 09:24:58 2017
 """
 
 class Inputs:
-    L = 34.0 #Length of the fuselage
-    Lf1 = 5.0 #Length parameter
-    Lf2 = 14.6 #Length parameter
-    Lf3 = 7.6 #Length parameter
-    R = 2.1 #Fuselage radius
-    hf = 1.5 #Floor height
-    tsSkin = 0.003 #Skin thickness
-    tsFloor = 0.02 #Floor thickness
-    tst = 0.0012 #Thickness of stiffener
-    hst = 0.015 #height of stiffener
-    wst = 0.02 #Width of stiffener
-    ns = 36 #Number of siffeners
-    dtailz = 3.1 #z-distance of aerodynamic center of the tail to the back of the fuselage
-    dtaily = 4.5 #y-distance of aerodynamic center of the tail to the back of the fuselage
-    dtgy = 1.9 #y-distance between bottom of the fuselage and the landing gear
-    Sx = 1.6*10**5 #Lateral force on the tail
-    W = 64000 #Design landing mass
+    def __init__(self):
+        self.L = 34.0 #Length of the fuselage
+        self.Lf1 = 5.0 #Length parameter
+        self.Lf2 = 14.6 #Length parameter
+        self.Lf3 = 7.6 #Length parameter
+        self.R = 2.1 #Fuselage radius
+        self.hf = 1.5 #Floor height
+        self.tsSkin = 0.003 #Skin thickness
+        self.tsFloor = 0.02 #Floor thickness
+        self.tst = 0.0012 #Thickness of stiffener
+        self.hst = 0.015 #height of stiffener
+        self.wst = 0.02 #Width of stiffener
+        self.ns = 36 #Number of siffeners
+        self.dtailz = 3.1 #z-distance of aerodynamic center of the tail to the back of the fuselage
+        self.dtaily = 4.5 #y-distance of aerodynamic center of the tail to the back of the fuselage
+        self.dtgy = 1.9 #y-distance between bottom of the fuselage and the landing gear
+        self.Sx = 1.6*10**5 #Lateral force on the tail
+        self.W = 64000 #Design landing mass

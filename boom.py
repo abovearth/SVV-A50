@@ -5,6 +5,8 @@ Created on Mon Feb 20 09:51:55 2017
 
 @author: Roeland
 """
+import inputs
+Inputs = inputs.Inputs()
 
 class Boom:
     #Boom Parameters

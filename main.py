@@ -54,9 +54,13 @@ while change>0.01:
         Iyy = Slices[i].Iyy
         for j in xrange(len(Slices[i].booms)):
             Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Slices[i].booms[j].x,Slices[i].booms[j].y)
+#End of Feedback Loop
 
-    
-
+for i in xrange(len(Slices)):
+    Sx = FP.Sx(Slices[i].z)
+    Sy = FP.Sy(Slices[i].z)
+    qbi = SP.OpenSectionShearFlow(yBarFloor,Sx,Sy,Slices[i])
+    qs0i = SP.ClosedSectionShearFlow()
     
 ### Collecting Results
 MaxSF1 = 0.

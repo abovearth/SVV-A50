@@ -9,11 +9,11 @@ import inputs
 Inputs = inputs.Inputs()
 
 def Sx(z):
-    Sx = 0
+    Sx = 0.
     if z>Inputs.Lf1:
-        Sx += 0
+        Sx += 1.
     if z>Inputs.Lf2:
-        Sx += 0
+        Sx += 1.
     return Sx
     
 def Sy(z):
@@ -26,25 +26,25 @@ def Sy(z):
     return Sy
     
 def Mx(z):
-    Mx = 0
+    Mx = 1.
     if z>Inputs.Lf1:
-        Mx += 0
+        Mx += 1.
     if z>Inputs.Lf2:
-        Mx += 0
+        Mx += 1.
     return Mx
     
 def My(z):
-    My = 0
+    My = 1.
     if z>Inputs.Lf1:
-        My += 0
+        My += 1.
     if z>Inputs.Lf2:
-        My += 0
+        My += 1.
     return My
     
 def Mz(z):
-    Mz = 0
+    Mz = 1.
     if z>Inputs.Lf1:
-        Mz += 0
+        Mz += 1.
     if z>Inputs.Lf2:
-        Mz += 0
+        Mz += 1.
     return Mz

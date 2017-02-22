@@ -18,18 +18,18 @@ def OpenSectionShearFlow(yBarFloor,Sx,Sy,Slice):
     BoomAreaTimesX = 0.
     BoomAreaTimesY = 0.
     for j in xrange(len(Slice.booms)):
-        BoomAreaTimesX += Slice.boom[j].boomArea*abs(Slice.boom[j].x-Slice.xBar)
-        BoomAreaTimesY += Slice.boom[j].boomArea*abs(Slice.boom[j].y-Slice.yBar)
+        BoomAreaTimesX += Slice.booms[j].boomArea*abs(Slice.booms[j].x-Slice.xBar)
+        BoomAreaTimesY += Slice.booms[j].boomArea*abs(Slice.booms[j].y-Slice.yBar)
     return -Sx/Slice.Iyy*(Qxf + BoomAreaTimesX) -Sy/Slice.Ixx*(Qyf + BoomAreaTimesY)
     
 def ClosedSectionShearFlow():
     return 0
     
-def TotalShearFlow():
-    return 0
+def TotalShearFlow(qb,qs):
+    return qb + qs
     
-def ShearStress():
-    return 0
+def ShearStress(qs,t):
+    return qs/t
     
 def TotalStress():
     return 0

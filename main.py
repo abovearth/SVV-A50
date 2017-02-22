@@ -27,10 +27,11 @@ for i in xrange(nSlices):
 yBarFloor = (-(Inputs.R-Inputs.hf)*2*Inputs.tsFloor*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2))/(2*math.pi*Inputs.R*Inputs.tsSkin+2*Inputs.tsFloor*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2))
 IxxFloor = 1./12.*Inputs.tsFloor*(2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2))**3+Inputs.tsFloor*2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2)*(Inputs.R-Inputs.hf-yBarFloor)
 IyyFloor = 1./12.*(2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2))*Inputs.tsFloor**3
+print "ybar = " + str(yBarFloor) + " IxxFloor = " + str(IxxFloor) + " IyyFloor = " + str(IyyFloor)
 
 #Start of Feedback Loop
-change = 0.02
-while change>0.01:
+change = 0.0
+while change<0.0001:
     
     # Boom Area Calculation
     Astringer = Inputs.tst*(Inputs.wst+Inputs.hst) #thinwalled assumption
@@ -38,11 +39,13 @@ while change>0.01:
     for i in xrange(len(Slices)):
         for j in xrange(len(Slices[i].booms)):
             Slices[i].booms[j].calculateBoomArea(Astringer,Slices[i].booms[j-1],Slices[i].booms[(j+1)%len(Slices[i].booms)])
+            print Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea
             if ( Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea)>change:
                 change =  Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea
             Slices[i].booms[j].previousBoomArea = Slices[i].booms[j].boomArea
     
     for i in xrange(len(Slices)):
+        Slices[i].calculateXBar()
         Slices[i].calculateYBar()
         Slices[i].calculateIxx(IxxFloor)
         Slices[i].calculateIyy(IyyFloor)

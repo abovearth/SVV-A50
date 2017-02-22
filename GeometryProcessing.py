@@ -21,7 +21,7 @@ class Boom:
         self.sigma = 1.
         
     def calculateBoomArea(self,Astringer,BoomPrevious,BoomNext):
-        print BoomPrevious, BoomNext
+        #print BoomPrevious, BoomNext
         self.boomArea = Astringer + Inputs.tsSkin*math.sqrt((BoomNext.x-self.x)**2+(BoomNext.y-self.y)**2)/6.*(2.+BoomNext.sigma/self.sigma) + Inputs.tsSkin*math.sqrt((BoomPrevious.x-self.x)**2+(BoomPrevious.y-self.y)**2)/6.*(2.+BoomPrevious.sigma/self.sigma)
         
     def __repr__(self):
@@ -40,7 +40,15 @@ class Slice:
         self.yBar = 0.
         self.Ixx = 0.
         self.Iyy = 0.
-            
+    
+    def calculateXBar(self):
+        xBartemp = 0.
+        boomAreaSum = 0.
+        for i in xrange(len(self.booms)):
+            xBartemp += self.booms[i].x*self.booms[i].boomArea
+            boomAreaSum = boomAreaSum + self.booms[i].boomArea
+        self.xBar = xBartemp/boomAreaSum
+        
     def calculateYBar(self):
         yBartemp = 0.
         boomAreaSum = 0.

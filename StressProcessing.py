@@ -7,7 +7,7 @@ Created on Wed Feb 22 09:54:48 2017
 """
 
 def DirectStress(Mx,My,Ixx,Iyy,x,y):
-    return Mx/Ixx*y+My/Iyy*x
+    return -Mx/Ixx*y-My/Iyy*x
     
 def OpenSectionShearFlow():
     return 0

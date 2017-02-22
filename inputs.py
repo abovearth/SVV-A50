@@ -19,7 +19,7 @@ class Inputs:
         self.tst = 0.0012 #Thickness of stiffener
         self.hst = 0.015 #height of stiffener
         self.wst = 0.02 #Width of stiffener
-        self.ns = 36 #Number of siffeners
+        self.ns = 36 #Number of stiffeners
         self.dtailz = 3.1 #z-distance of aerodynamic center of the tail to the back of the fuselage
         self.dtaily = 4.5 #y-distance of aerodynamic center of the tail to the back of the fuselage
         self.dtgy = 1.9 #y-distance between bottom of the fuselage and the landing gear

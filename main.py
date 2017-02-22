@@ -8,6 +8,8 @@ import inputs
 Inputs = inputs.Inputs()
 import math
 import GeometryProcessing as GP
+import ForcesProcessing as FP
+import StressProcessing as SP
 
 nSlices = 50
 nBooms = Inputs.ns
@@ -19,40 +21,42 @@ for i in xrange(nSlices):
     Slices.append(GP.Slice(z)) # Boom Discretization happens in the constructor of the Slice class
 ###End of Discretization
 
-### Geometry Processing
 
-# Boom Area Calculation
-Astringer = Inputs.tst*(Inputs.wst+Inputs.hst) #thinwalled assumption
-sigmainext = 1.
-sigmaithis = 1.
-sigmaiprevious = 1.
-for i in xrange(len(Slices)):
-    for j in xrange(len(Slices[i].booms)):
-        Slices[i].booms[j].calculateBoomArea(Astringer,sigmainext,sigmaithis,sigmaiprevious)
-        
+
 # Floor inertia calculations
 yBarFloor = (-(Inputs.R-Inputs.hf)*2*Inputs.tsFloor*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2))/(2*math.pi*Inputs.R*Inputs.tsSkin+2*Inputs.tsFloor*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2))
 IxxFloor = 1./12.*Inputs.tsFloor*(2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2))**3+Inputs.tsFloor*2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2)*(Inputs.R-Inputs.hf-yBarFloor)
 IyyFloor = 1./12.*(2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2))*Inputs.tsFloor**3
 
-for i in xrange(len(Slices)):
-    Slices[i].calculateYBar()
-    Slices[i].calculateIxx(IxxFloor)
-    Slices[i].calculateIyy(IyyFloor)
+#Start of Feedback Loop
+change = 0.02
+while change>0.01:
     
-### End of Geometry Processing
+    # Boom Area Calculation
+    Astringer = Inputs.tst*(Inputs.wst+Inputs.hst) #thinwalled assumption
     
-### Forces Processing
+    for i in xrange(len(Slices)):
+        for j in xrange(len(Slices[i].booms)):
+            Slices[i].booms[j].calculateBoomArea(Astringer,Slices[i].booms[j-1],Slices[i].booms[(j+1)%len(Slices[i].booms)])
+            if ( Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea)>change:
+                change =  Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea
+            Slices[i].booms[j].previousBoomArea = Slices[i].booms[j].boomArea
     
+    for i in xrange(len(Slices)):
+        Slices[i].calculateYBar()
+        Slices[i].calculateIxx(IxxFloor)
+        Slices[i].calculateIyy(IyyFloor)
+        
+    for i in xrange(len(Slices)):
+        Mx = FP.Mx(Slices[i].z)
+        My = FP.My(Slices[i].z)
+        Ixx = Slices[i].Ixx
+        Iyy = Slices[i].Iyy
+        for j in xrange(len(Slices[i].booms)):
+            Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Slices[i].booms[j].x,Slices[i].booms[j].y)
 
     
-### End of Forces Processing
-    
-### Stress Processing
-    
 
-    
-### End of Stress Processing
     
 ### Collecting Results
 MaxSF1 = 0.

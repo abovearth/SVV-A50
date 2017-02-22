@@ -17,7 +17,7 @@ def Sx(z):
     return Sx
     
 def Sy(z):
-    q = -Inputs.W/Inputs.L
+    q = 3*-9.81*Inputs.W/Inputs.L
     Sy = q*z
     if z>Inputs.Lf1:
         Sy += 0

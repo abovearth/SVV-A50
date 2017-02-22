@@ -7,7 +7,7 @@ Created on Mon Feb 20 09:45:13 2017
 import inputs
 Inputs = inputs.Inputs()
 import math
-import slice
+import GeometryProcessing as GP
 
 nSlices = 50
 nBooms = Inputs.ns
@@ -16,7 +16,7 @@ nBooms = Inputs.ns
 Slices = []
 for i in xrange(nSlices):
     z=i*Inputs.L/nSlices
-    Slices.append(slice.Slice(z)) # Boom Discretization happens in the constructor of the Slice class
+    Slices.append(GP.Slice(z)) # Boom Discretization happens in the constructor of the Slice class
 ###End of Discretization
 
 ### Geometry Processing

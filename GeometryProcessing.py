@@ -4,11 +4,26 @@ Created on Mon Feb 20 09:48:10 2017
 
 @author: Roeland
 """
-import boom
+
 import math
 import inputs
 Inputs = inputs.Inputs()
 
+class Boom:
+    #Boom Parameters
+    x = 0.
+    y = 0.
+    z = 0.
+    boomArea = 0.
+
+    def __init__(self,x,y,z):
+        self.x=x
+        self.y=y
+        self.z=z
+        
+    def calculateBoomArea(self,Astringer,sigmainext,sigmaithis,sigmaiprevious):
+        self.boomArea = Astringer + Inputs.tsSkin/6.*(2.+sigmainext/sigmaithis) + Inputs.tsSkin/6.*(2.+sigmaiprevious/sigmaithis)
+        
 class Slice:
     zDistance = 0.
     booms = []
@@ -22,7 +37,7 @@ class Slice:
         for i in xrange(Inputs.ns): #Discretization in booms
             x = Inputs.R*math.cos(i*Inputs.ns/360)
             y = Inputs.R*math.sin(i*Inputs.ns/360)
-            self.booms.append(boom.Boom(x,y,z))
+            self.booms.append(Boom(x,y,z))
             
     def calculateYBar(self):
         yBar = 0.

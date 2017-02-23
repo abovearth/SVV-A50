@@ -20,7 +20,7 @@ def OpenSectionShearFlow(yBarFloor,Sx,Sy,Slice):
     for j in xrange(len(Slice.booms)):
         BoomAreaTimesX += Slice.booms[j].boomArea*abs(Slice.booms[j].x-Slice.xBar)
         BoomAreaTimesY += Slice.booms[j].boomArea*abs(Slice.booms[j].y-Slice.yBar)
-    return -Sx/Slice.Iyy*(Qxf + BoomAreaTimesX) -Sy/Slice.Ixx*(Qyf + BoomAreaTimesY)
+    return -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Qxf + BoomAreaTimesX) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Qyf + BoomAreaTimesY)
     
 def ClosedSectionShearFlow():
     #Find the shear centre

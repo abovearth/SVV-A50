@@ -72,7 +72,7 @@ def Mx(z):
     
 def My(z):
     if z <= L1:
-        My = 0
+        My = 0.
         
     elif L1 < z <= L2+L1:
         z = z - L1

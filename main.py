@@ -49,15 +49,16 @@ while change<0.0001:
         Slices[i].calculateYBar()
         Slices[i].calculateIxx(IxxFloor)
         Slices[i].calculateIyy(IyyFloor)
+        Slices[i].calculateIxy()
         
     for i in xrange(len(Slices)):
         Mx = FP.Mx(Slices[i].z)
         My = FP.My(Slices[i].z)
-        print "Mx = " + str(Mx) + ", My = " + str(My)
         Ixx = Slices[i].Ixx
         Iyy = Slices[i].Iyy
+        Ixy = Slices[i].Ixy
         for j in xrange(len(Slices[i].booms)):
-            Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Slices[i].booms[j].x,Slices[i].booms[j].y)
+            Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,Slices[i].booms[j].y)
 #End of Feedback Loop
 
 for i in xrange(len(Slices)):

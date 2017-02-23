@@ -22,7 +22,10 @@ class Boom:
         
     def calculateBoomArea(self,Astringer,BoomPrevious,BoomNext):
         #print BoomPrevious, BoomNext
-        self.boomArea = Astringer + Inputs.tsSkin*math.sqrt((BoomNext.x-self.x)**2+(BoomNext.y-self.y)**2)/6.*(2.+BoomNext.sigma/self.sigma) + Inputs.tsSkin*math.sqrt((BoomPrevious.x-self.x)**2+(BoomPrevious.y-self.y)**2)/6.*(2.+BoomPrevious.sigma/self.sigma)
+        if self.sigma == 0:
+            self.boomArea = Astringer + Inputs.tsSkin*math.sqrt((BoomNext.x-self.x)**2+(BoomNext.y-self.y)**2)/6.*(2.+0.) + Inputs.tsSkin*math.sqrt((BoomPrevious.x-self.x)**2+(BoomPrevious.y-self.y)**2)/6.*(2.+0.)
+        else:
+            self.boomArea = Astringer + Inputs.tsSkin*math.sqrt((BoomNext.x-self.x)**2+(BoomNext.y-self.y)**2)/6.*(2.+BoomNext.sigma/self.sigma) + Inputs.tsSkin*math.sqrt((BoomPrevious.x-self.x)**2+(BoomPrevious.y-self.y)**2)/6.*(2.+BoomPrevious.sigma/self.sigma)
         
     def __repr__(self):
         return "Boom: " + "x = " + str(self.x) + ",y = " + str(self.y) + ",z = " + str(self.z) + ",boomArea = " + str(self.boomArea) + ",sigma = " + str(self.sigma)
@@ -40,6 +43,7 @@ class Slice:
         self.yBar = 0.
         self.Ixx = 0.
         self.Iyy = 0.
+        self.Ixy = 0.
     
     def calculateXBar(self):
         xBartemp = 0.
@@ -66,6 +70,11 @@ class Slice:
         self.Iyy = IyyFloor
         for i in xrange(len(self.booms)):
             self.Iyy += self.booms[i].boomArea*(self.booms[i].x-self.xBar)**2
+            
+    def calculateIxy(self):
+        self.Ixy = 0.
+        for i in xrange(len(self.booms)):
+            self.Ixy += self.booms[i].boomArea*(self.booms[i].y-self.yBar)*(self.booms[i].x-self.xBar)
         
     def __repr__(self):
         return "Slice: " + "z = " + str(self.z) + ",xBar = " + str(self.xBar) + ",yBar = " + str(self.yBar) + ",Ixx = " + str(self.Ixx) + ",Iyy = " + str(self.Iyy) + ",Booms = " + str(self.booms)

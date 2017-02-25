@@ -18,12 +18,12 @@ class Boom:
         self.z=z
         self.boomArea = 0.
         self.previousBoomArea = 0.
-        self.sigma = 1.
+        self.sigma = 0.
         
     def calculateBoomArea(self,Astringer,BoomPrevious,BoomNext,LengthBetween2Booms):
         #print BoomPrevious, BoomNext
-        if self.sigma == 0:
-            self.boomArea = Astringer + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+0.) + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+0.)
+        if self.sigma == 0.:
+            self.boomArea = Astringer + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+1.) + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+1.)
         else:
             self.boomArea = Astringer + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+BoomNext.sigma/self.sigma) + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+BoomPrevious.sigma/self.sigma)
         

@@ -36,8 +36,8 @@ class Slice:
         self.z = z
         self.booms = []
         for i in xrange(Inputs.ns): #Discretization in booms
-            x = Inputs.R*math.cos(i*Inputs.ns/360)
-            y = Inputs.R*math.sin(i*Inputs.ns/360)
+            x = Inputs.R*math.cos(i*360./Inputs.ns/180.*math.pi)
+            y = Inputs.R*math.sin(i*360./Inputs.ns/180.*math.pi)
             self.booms.append(Boom(x,y,z))
         self.xBar = 0. #Symmetry thus stays zero
         self.yBar = 0.

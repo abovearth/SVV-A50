@@ -84,10 +84,15 @@ def My(z):
         
     return My
     
-def Mz(z):
-    Mz = 1.
-    if z>Inputs.Lf1:
-        Mz += 1.
-    if z>Inputs.Lf2:
-        Mz += 1.
+    #FP.Mz(Slices[i].z,Slices[i].yBar)
+def Mz(z, ybar): #ybar needed for every slice?
+    #ybar = 395.52*10**-3
+    if z <= L1:
+        Mz = 0.
+    elif L1 < z <= L2+L1:
+        z = z - L1
+        Mz = Sx*(Inputs.dtaily-Inputs.R+ybar)-(Rx*(Inputs.dtgy+Inputs.R-ybar))
+    elif L1+L2 < z <= L:
+        z = z - (L2+L1)
+        Mz = Sx*(Inputs.dtaily-Inputs.R+ybar)
     return Mz

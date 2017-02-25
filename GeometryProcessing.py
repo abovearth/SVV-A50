@@ -20,12 +20,12 @@ class Boom:
         self.previousBoomArea = 0.
         self.sigma = 1.
         
-    def calculateBoomArea(self,Astringer,BoomPrevious,BoomNext):
+    def calculateBoomArea(self,Astringer,BoomPrevious,BoomNext,LengthBetween2Booms):
         #print BoomPrevious, BoomNext
         if self.sigma == 0:
-            self.boomArea = Astringer + Inputs.tsSkin*math.sqrt((BoomNext.x-self.x)**2+(BoomNext.y-self.y)**2)/6.*(2.+0.) + Inputs.tsSkin*math.sqrt((BoomPrevious.x-self.x)**2+(BoomPrevious.y-self.y)**2)/6.*(2.+0.)
+            self.boomArea = Astringer + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+0.) + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+0.)
         else:
-            self.boomArea = Astringer + Inputs.tsSkin*math.sqrt((BoomNext.x-self.x)**2+(BoomNext.y-self.y)**2)/6.*(2.+BoomNext.sigma/self.sigma) + Inputs.tsSkin*math.sqrt((BoomPrevious.x-self.x)**2+(BoomPrevious.y-self.y)**2)/6.*(2.+BoomPrevious.sigma/self.sigma)
+            self.boomArea = Astringer + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+BoomNext.sigma/self.sigma) + Inputs.tsSkin*LengthBetween2Booms/6.*(2.+BoomPrevious.sigma/self.sigma)
         
     def __repr__(self):
         return "Boom: " + "x = " + str(self.x) + ",y = " + str(self.y) + ",z = " + str(self.z) + ",boomArea = " + str(self.boomArea) + ",sigma = " + str(self.sigma)

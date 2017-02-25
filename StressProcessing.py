@@ -42,8 +42,16 @@ def OpenSectionShearFlow(yBarFloor,Sx,Sy,Slice):
     for j in xrange(len(Slice.booms)):
         Slice.booms[j].qb = Slice.booms[j].qb *-1. #correct the orientation from clockwise to counterclockwise
 
-def ClosedSectionShearFlow():
-    
+def ClosedSectionShearFlow(FloorWidth,Slice,LengthBetween2Booms):
+    AreaI  = Inputs.R**2 * (180./math.pi+2*math.asin(Inputs.hf/Inputs.R))
+    AreaII = Inputs.R**2 * (180./math.pi-2*math.asin(Inputs.hf/Inputs.R))
+    Gref = 1.0
+    deltaFloor = FloorWidth/Inputs.tsFloor
+    deltaI  = deltaFloor + Inputs.R * (180./math.pi+2*math.asin(Inputs.hf/Inputs.R))/Inputs.tsFloor
+    deltaII = deltaFloor + Inputs.R * (180./math.pi-2*math.asin(Inputs.hf/Inputs.R))/Inputs.tsFloor
+    openSectionIntegralI = Slice.booms[0].qb*LengthBetween2Booms/Inputs.tsSkin
+    rateOfTwistI  = 1./(2.*AreaI *Gref)*(-1.*qs0II*deltaFloor+qs0I *deltaI +openSectionIntegralI )
+    rateOfTwistII = 1./(2.*AreaII*Gref)*(-1.*qs0I *deltaFloor+qs0II*deltaII+openSectionIntegralII)
     return 0
     
 def TotalShearFlow(qb,qs):

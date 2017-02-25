@@ -23,7 +23,7 @@ for i in xrange(nSlices):
 
 
 Astringer = Inputs.tst*(Inputs.wst+Inputs.hst) #thinwalled assumption
-    
+LengthBetween2Booms = Inputs.R * 10./180.*math.pi
 # Floor inertia calculations
 Floorwidth = 2*math.sqrt(Inputs.R**2-(Inputs.R-Inputs.hf)**2)
 yBar = (-(Inputs.R-Inputs.hf)*Inputs.tsFloor*Floorwidth)/(2*math.pi*Inputs.R*Inputs.tsSkin+Inputs.tsFloor*Floorwidth+36*Astringer)
@@ -38,7 +38,7 @@ while change<0.0001:
     # Boom Area Calculation
     for i in xrange(len(Slices)):
         for j in xrange(len(Slices[i].booms)):
-            Slices[i].booms[j].calculateBoomArea(Astringer,Slices[i].booms[j-1],Slices[i].booms[(j+1)%len(Slices[i].booms)])
+            Slices[i].booms[j].calculateBoomArea(Astringer,Slices[i].booms[j-1],Slices[i].booms[(j+1)%len(Slices[i].booms)],LengthBetween2Booms)
             #print Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea
             if ( Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea)>change:
                 change =  Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea

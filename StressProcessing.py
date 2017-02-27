@@ -92,12 +92,12 @@ def ClosedSectionShearFlow(FloorWidth,Slice,LengthBetween2Booms):
             Slice.booms[j].qs = Slice.booms[j].qb + qs0I 
         elif j>=11 and j<=24:
             Slice.booms[j].qs = Slice.booms[j].qb + qs0II
-        print "Slice (z = " + str(Slice.z) + "), Boom (j = " + str (j) + ") qs = " + str(Slice.booms[j].qs)
+        #print "Slice (z = " + str(Slice.z) + "), Boom (j = " + str (j) + ") qs = " + str(Slice.booms[j].qs)
             
     #check for the difference between integral of qs*dy and Vy
     integral = 0.
     for j in xrange(len(Slice.booms)):
-        integral += Slice.booms[j].qs*Slice.booms[j].y
+        integral += Slice.booms[j].qs*(Slice.booms[j].y+math.sin(j*10/180*math.pi+5/180*math.pi))
     print "Difference between integral of qs*dy " + str(integral) +" and Vy " + str( FP.Vy(Slice.z)) + " at Slice.z  (" + str(Slice.z) + ") = " + str(abs(integral - FP.Vy(Slice.z)))
     
 def ShearStress(qs,t):

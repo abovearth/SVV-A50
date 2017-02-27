@@ -36,7 +36,14 @@ yBarRing = (2*math.pi*Inputs.R*Inputs.tsSkin)/(2*math.pi*Inputs.R*Inputs.tsSkin+
 IyyRing = math.pi*Inputs.R**3*Inputs.tsSkin
 IxxRing = math.pi*Inputs.R**3*Inputs.tsSkin + 2*math.pi*Inputs.tsSkin*yBarRing
 print "yBar = " + str(yBarRing) + " IxxRing = " + str(IxxRing) + " IyyRing = " + str(IyyRing)
-
+for i in xrange(len(Slices)):
+    Mx = FP.Mx(Slices[i].z)
+    My = FP.My(Slices[i].z)
+    Iyy = 0.1535701345
+    Ixx = 0.05142280605
+    Ixy = 0.0
+    for j in xrange(len(Slices[i].booms)):
+                Slices[i].booms[j].sigma = random.randrange(0,400000)#SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,Slices[i].booms[j].y)
 
 #Start of Feedback Loop
 change = 0.0

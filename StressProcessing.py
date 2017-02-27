@@ -8,6 +8,7 @@ Created on Wed Feb 22 09:54:48 2017
 import inputs
 Inputs = inputs.Inputs()
 import math
+import ForcesProcessing as FP
 
 def DirectStress(Mx,My,Ixx,Iyy,Ixy,x,y):
     return ((My*Ixx-Mx*Ixy)/(Ixx*Iyy-Ixy**2))*x+((Mx*Iyy-My*Ixy)/(Ixx*Iyy-Ixy**2))*y
@@ -80,11 +81,24 @@ def ClosedSectionShearFlow(FloorWidth,Slice,LengthBetween2Booms):
     0. = cellIopensectionmoment + cellIIopensectionmoment + 2*AreaI *qs0I + 2*AreaII*qs0II
     """
     #qs0I = (cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI)
+    #rateOfTwistII = 1./(2.*AreaII*Gref)*(-1.*(cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI) *deltaFloor+qs0II*deltaII+openSectionIntegralII)    
+    #1./(2.*AreaI *Gref)*(-1.*qs0II*deltaFloor+(cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI) *deltaI +openSectionIntegralI ) = 1./(2.*AreaII*Gref)*(-1.*(cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI) *deltaFloor+qs0II*deltaII+openSectionIntegralII)    
+    qs0II = ((cellIopensectionmoment + cellIIopensectionmoment)*(-deltaI/(2*AreaI) - deltaFloor/(2*AreaII)) + AreaI/AreaII*openSectionIntegralI - openSectionIntegralII)/(AreaII/AreaI*deltaI - AreaI/AreaII*deltaII)
+    qs0I = (cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI)
     
-    return 0
-    
-def TotalShearFlow(qb,qs):
-    return qb + qs
+    #totalShearFlow
+    for j in xrange(len(Slice.booms)):
+        if j<=10 or j>=25:
+            Slice.booms[j].qs = Slice.booms[j].qb + qs0I 
+        elif j>=11 and j<=24:
+            Slice.booms[j].qs = Slice.booms[j].qb + qs0II
+        print "Slice (z = " + str(Slice.z) + "), Boom (j = " + str (j) + ") qs = " + str(Slice.booms[j].qs)
+            
+    #check for the difference between integral of qs*dy and Vy
+    integral = 0.
+    for j in xrange(len(Slice.booms)):
+        integral += Slice.booms[j].qs*Slice.booms[j].y
+    print "Difference between integral of qs*dy " + str(integral) +" and Vy " + str( FP.Vy(Slice.z)) + " at Slice.z  (" + str(Slice.z) + ") = " + str(abs(integral - FP.Vy(Slice.z)))
     
 def ShearStress(qs,t):
     return qs/t

@@ -19,8 +19,7 @@ Slices = []
 for i in xrange(nSlices):
     z=i*Inputs.L/nSlices
     Slices.append(GP.Slice(z)) # Boom Discretization happens in the constructor of the Slice class
-for j in xrange(len(Slices[1].booms)):
-    print Slices[1].booms[j].x
+
 ###End of Discretization
 
 
@@ -43,7 +42,7 @@ for i in xrange(len(Slices)):
     Ixx = 0.05142280605
     Ixy = 0.0
     for j in xrange(len(Slices[i].booms)):
-                Slices[i].booms[j].sigma = random.randrange(0,400000)#SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,Slices[i].booms[j].y)
+                Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,Slices[i].booms[j].y)
 
 #Start of Feedback Loop
 change = 0.0
@@ -75,7 +74,7 @@ while change<0.0001:
         Iyy = Slices[i].Iyy
         Ixy = Slices[i].Ixy
         for j in xrange(len(Slices[i].booms)):
-            Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,Slices[i].booms[j].y)
+            Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,(Slices[i].booms[j].y-Slices[i].yBar))
 #End of Feedback Loop
 
 for i in xrange(len(Slices)):
@@ -83,7 +82,7 @@ for i in xrange(len(Slices)):
     Sy = FP.Vy(Slices[i].z)
     qbi = SP.OpenSectionShearFlow(yBar,Sx,Sy,Slices[i])
     qs0i = SP.ClosedSectionShearFlow(Floorwidth,Slices[i],LengthBetween2Booms)
-    
+
 ### Collecting Results
 MaxSF1 = 0.
 MaxSF2 = 0.

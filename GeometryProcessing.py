@@ -73,8 +73,8 @@ class Slice:
             
     def calculateIxy(self):
         self.Ixy = 0.
-        for i in xrange(len(self.booms)):
-            self.Ixy += self.booms[i].boomArea*(self.booms[i].y-self.yBar)*(self.booms[i].x-self.xBar)
+        #for i in xrange(len(self.booms)):
+        #    self.Ixy += self.booms[i].boomArea*(self.booms[i].y-self.yBar)*(self.booms[i].x-self.xBar)
         
     def __repr__(self):
         return "Slice: " + "z = " + str(self.z) + ",xBar = " + str(self.xBar) + ",yBar = " + str(self.yBar) + ",Ixx = " + str(self.Ixx) + ",Iyy = " + str(self.Iyy) + ",Booms = " + str(self.booms)

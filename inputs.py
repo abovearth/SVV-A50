@@ -5,6 +5,7 @@ Created on Mon Feb 20 09:24:58 2017
 
 @author: Roeland
 """
+import math
 
 class Inputs:
     def __init__(self):
@@ -28,3 +29,8 @@ class Inputs:
         self.IyyA = 0.1535701345
         self.IxxA = 0.05142280605
         self.IxyA = 0.0
+        self.Floorwidth = 2*math.sqrt(self.R**2-(self.R-self.hf)**2)
+        self.theta = math.pi/180*146.7969
+        self.totalArea = math.pi*self.R**2
+        self.AreaI  = (self.R**2)/2 *(self.theta - math.sin(self.theta))
+        self.AreaII = self.totalArea - self.AreaI

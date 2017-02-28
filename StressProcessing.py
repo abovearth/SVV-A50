@@ -14,59 +14,86 @@ def DirectStress(Mx,My,Ixx,Iyy,Ixy,x,y):
     sigmax = ((My*Ixx-Mx*Ixy)/(Ixx*Iyy-Ixy**2))*x
     sigmay = ((Mx*Iyy-My*Ixy)/(Ixx*Iyy-Ixy**2))*y
     return sigmax + sigmay
+
+def FloorShear(nFloor, Slice, Sx, Sy):
+    floorsection =  Inputs.Floorwidth/nFloor
+    Slice.qf=[]
+    for i in xrange(nFloor):       
+        FloorX = ((-Inputs.Floorwidth/2+floorsection*i)+floorsection/2)
+        FloorY = -Inputs.R-Inputs.hf
+        Slice.Qxf = (Inputs.tsFloor*2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2)*FloorX)#symmetry
+        Slice.Qyf = Inputs.tsFloor*2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2)*FloorY
+        Slice.qf.append(-((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(-1*Slice.Qxf)-((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(-1*Slice.Qyf))
     
-def OpenSectionShearFlow(yBarFloor,Sx,Sy,Slice):
-    Qxf = Inputs.tsFloor*2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2)*abs(0-Slice.xBar)#symmetry
-    Qyf = Inputs.tsFloor*2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2)*abs(yBarFloor-Slice.yBar)
-    BoomAreaTimesX = 0.
-    BoomAreaTimesY = 0.
+def OpenSectionShearFlow(Sx,Sy,Slice, Qxf, Qyf):    
+    BoomAreaTimesX1 = 0.
+    BoomAreaTimesY1 = 0.
+    BoomAreaTimesX2 = 0.
+    BoomAreaTimesY2 = 0.
     for j in xrange(len(Slice.booms)):#upper cell
-        if j<=10 or j>=25:
-            BoomAreaTimesX += Slice.booms[j].boomArea*abs(Slice.booms[j].x)
-            BoomAreaTimesY += Slice.booms[j].boomArea*abs(Slice.booms[j].y-Slice.yBar)
-            if j<10:
-                Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY)
-            elif j>=25 or j==10: #add floor with a corrected orientation
-                Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(-Qxf + BoomAreaTimesX) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(-Qyf + BoomAreaTimesY)
+        if j<=19 or j>=35:
+            BoomAreaTimesX1 += Slice.booms[j].boomArea*Slice.booms[j].x
+            BoomAreaTimesY1 += Slice.booms[j].boomArea*Slice.booms[j].y
+            if j<19:
+                Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX1) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY1)
+            elif j==19: 
+                Slice.booms[j].qb = (-((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qxf + BoomAreaTimesX1) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qyf + BoomAreaTimesY1))
             if j==35:
                 Slice.booms[j].qb = 0.#cut
-    BoomAreaTimesX = 0.
-    BoomAreaTimesY = 0.
-    for j in xrange(len(Slice.booms)):#lower cell
-        if j==11:
-            Slice.booms[j].qb = 0. #cut
-        if j>=11 and j<25:
-            BoomAreaTimesX += Slice.booms[j].boomArea*abs(Slice.booms[j].x-Slice.xBar)
-            BoomAreaTimesY += Slice.booms[j].boomArea*abs(Slice.booms[j].y-Slice.yBar)
-            if j>=11:
-                Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY)
-            if j==24: #add floor
-                Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Qxf + BoomAreaTimesX) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Qyf + BoomAreaTimesY)
-    for j in xrange(len(Slice.booms)):
-        Slice.booms[j].qb = Slice.booms[j].qb *-1. #correct the orientation from clockwise to counterclockwise
+            #Slice.booms[19].qb
+        if j<=34 and j > 19:
+            BoomAreaTimesX2 += Slice.booms[j].boomArea*Slice.booms[j].x
+            BoomAreaTimesY2 += Slice.booms[j].boomArea*Slice.booms[j].y
+            if j == 20:
+                 Slice.booms[j].qb = 0.#cut
+            elif j > 20 and j < 34:
+                Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX2) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY2)
+            elif j == 34:
+              Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qxf + BoomAreaTimesX2) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qyf + BoomAreaTimesY2)  
+            
+def ClosedSectionShearFlow(nFloor, LengthBetween2Booms, Slice):
+    floorsection =  Inputs.Floorwidth/nFloor
+    for i in xrange(nFloor):     
+            FloorX = ((-Inputs.Floorwidth/2+floorsection*i)+floorsection/2)
+            FloorY = -Inputs.R-Inputs.hf
+            qf = (math.sqrt(FloorX**2+FloorY**2)*Slice.qf[i]*floorsection)
+    for j in xrange(len(Slice.booms)):    
+        Slice.qs0I = ((Inputs.R * Slice.booms[j].qb * LengthBetween2Booms) + qf)/(-2*Inputs.AreaI) 
+        Slice.qs0II = ((Inputs.R * Slice.booms[j].qb * LengthBetween2Booms) - qf)/(-2*Inputs.AreaII)
 
-def ClosedSectionShearFlow(FloorWidth,Slice,LengthBetween2Booms):
-    theta = math.pi/180*146.7969
-    totalArea = math.pi*Inputs.R**2
+def TorqueShearFlow(Slice,LengthBetween2Booms,Mz):
+    #theta = math.pi/180*146.7969
+    #totalArea = math.pi*Inputs.R**2
     #AreaI  = Inputs.R**2 * (180./math.pi+2*math.asin(Inputs.hf/Inputs.R))
-    AreaI  = (Inputs.R**2)/2 *(theta - math.sin(theta))
+    #AreaI  = (Inputs.R**2)/2 *(theta - math.sin(theta))
     #AreaII = Inputs.R**2 * (180./math.pi-2*math.asin(Inputs.hf/Inputs.R))
-    AreaII = totalArea - AreaI
-    Gref = 1.0
-    deltaFloor = FloorWidth/Inputs.tsFloor
-    deltaI  = deltaFloor + Inputs.R * (180./math.pi+2*math.asin(Inputs.hf/Inputs.R))/Inputs.tsFloor
-    deltaII = deltaFloor + Inputs.R * (180./math.pi-2*math.asin(Inputs.hf/Inputs.R))/Inputs.tsFloor
-    openSectionIntegralI = 0.
-    openSectionIntegralII = 0.
-    for j in xrange(len(Slice.booms)):
-        if j<10 or j>=25:
-            openSectionIntegralI += Slice.booms[j].qb*LengthBetween2Booms/Inputs.tsSkin
-        elif j==10:
-            openSectionIntegralI += Slice.booms[j].qb* (2*Inputs.R * ((math.asin(Inputs.hf/Inputs.R)) %(10./180.*math.pi)) /Inputs.tsSkin + FloorWidth/Inputs.tsFloor) #10./180.*math.pi = 10 degrees in radians
-        elif j>=11 and j<24:
-            openSectionIntegralII += Slice.booms[j].qb*LengthBetween2Booms/Inputs.tsSkin
-        elif j==24:
-            openSectionIntegralII += Slice.booms[j].qb* (2*Inputs.R * (10./180.*math.pi - (math.asin(Inputs.hf/Inputs.R)) %(10./180.*math.pi)) /Inputs.tsSkin + FloorWidth/Inputs.tsFloor)
+    #AreaII = totalArea - AreaI
+    #deltaFloor = FloorWidth/Inputs.tsFloor
+    #deltaI  = deltaFloor + Inputs.R * (180./math.pi+2*math.asin(Inputs.hf/Inputs.R))/Inputs.tsFloor
+    #deltaII = deltaFloor + Inputs.R * (180./math.pi-2*math.asin(Inputs.hf/Inputs.R))/Inputs.tsFloor
+    #openSectionIntegralI = 0.
+    #openSectionIntegralII = 0.
+    J = LengthBetween2Booms/3 * Inputs.tsSkin**3
+    Jfloor = Inputs.Floorwidth/3 * Inputs.tsFloor**3
+    
+    #Jfloor is take twice -> torque higher?
+    JsumI  = 22*J + Jfloor
+    JsumII = 14*J +Jfloor
+    print JsumI, JsumII
+    T1 = Mz/(1. + JsumII/JsumI)
+    T2 = Mz - T1
+    Slice.qT1 = T1/(2*Inputs.AreaI)
+    Slice.qT2 = T2/(2*Inputs.AreaII)
+def errorSHEAR():
+    #for j in xrange(len(Slice.booms)):
+    #    if j<10 or j>=25:
+    #        openSectionIntegralI += Slice.booms[j].qb*LengthBetween2Booms/Inputs.tsSkin
+    #    elif j==10:
+    #        openSectionIntegralI += Slice.booms[j].qb* (2*Inputs.R * ((math.asin(Inputs.hf/Inputs.R)) %(10./180.*math.pi)) /Inputs.tsSkin + FloorWidth/Inputs.tsFloor) #10./180.*math.pi = 10 degrees in radians
+    #    elif j>=11 and j<24:
+    #        openSectionIntegralII += Slice.booms[j].qb*LengthBetween2Booms/Inputs.tsSkin
+    #    elif j==24:
+    #        openSectionIntegralII += Slice.booms[j].qb* (2*Inputs.R * (10./180.*math.pi - (math.asin(Inputs.hf/Inputs.R)) %(10./180.*math.pi)) /Inputs.tsSkin + FloorWidth/Inputs.tsFloor)
     
     cellIopensectionmoment  = 0.
     cellIIopensectionmoment = 0.

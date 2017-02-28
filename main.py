@@ -56,19 +56,22 @@ for i in xrange(len(Slices)):
             #print ((My*Ixx-Mx*Ixy)/(Ixx*Iyy-Ixy**2))*Slices[i].booms[j].x, ((Mx*Iyy-My*Ixy)/(Ixx*Iyy-Ixy**2))*(Slices[i].booms[j].y-yBar)
     for j in xrange(len(Slices[i].booms)):
                 Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,Slices[i].booms[j].y)
-                
+               
     #Floor stress (floor is 'disretized' into n sections of a thick slab, each carrying individual normal stress
-    floorsection =  Floorwidth/nFloor
+    flx = []
+    fly = []           
+    floorsection =  Inputs.Floorwidth/nFloor
     for k in xrange(nFloor):
         Mx = FP.Mx(Slices[i].z)
         My = FP.My(Slices[i].z)
         IxyFloor = 0.
-        FloorX = ((-Floorwidth/2+floorsection*k)+floorsection/2)
+        FloorX = ((-Inputs.Floorwidth/2+floorsection*k)+floorsection/2)
         FloorY = (-(Inputs.R-Inputs.hf+yBar))
         floorStress = SP.DirectStress(Mx,My,Ixx,IyyFloor,IxyFloor,FloorX,FloorY)
-        #print floorX
+        flx.append(FloorX)
+        fly.append(FloorY)
             
-
+#DISCRETIZATION
 #Start of Feedback Loop
 change = 0.0
 iterationnumber = 0
@@ -101,11 +104,40 @@ while change<0.0001:
             Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,(Slices[i].booms[j].y-Slices[i].yBar))
         #End of Feedback Loop
 
+#Shear Flow 
 for i in xrange(len(Slices)):
-    Sx = FP.Vx(Slices[i].z)
-    Sy = FP.Vy(Slices[i].z)
-    qbi = SP.OpenSectionShearFlow(yBar,Sx,Sy,Slices[i])
-    qs0i = SP.ClosedSectionShearFlow(Floorwidth,Slices[i],LengthBetween2Booms)
+    for j in xrange(len(Slices[i].booms)):
+        Sx = FP.Vx(Slices[i].z)
+        Sy = FP.Vy(Slices[i].z)
+        Mz = FP.Mz(Slices[i].z, yBar)
+        #qbi = SP.OpenSectionShearFlow(yBar,Sx,Sy,Slices[i])
+        #qs0i = SP.ClosedSectionShearFlow(Floorwidth,Slices[i],LengthBetween2Booms)
+    
+        SP.FloorShear(nFloor, Slices[i], Sx, Sy)
+        SP.OpenSectionShearFlow(Sx,Sy,Slices[i], Slices[i].Qxf, Slices[i].Qyf)        
+        SP.ClosedSectionShearFlow(nFloor,LengthBetween2Booms,Slices[i])        
+"""        
+qy =[]
+for j in xrange(len(Slices[11].booms)):
+        qy.append(Slices[11].booms[j].qb * (Slices[11].booms[j].x - Slices[11].booms[j-1].x))
+print sum(qy)
+print Slices[11].qs0I, Slices[11].qs0II 
+print "____"
+print FP.Vx(Slices[11].z)
+print FP.Vx(Slices[11].z) - sum(qy)
+print Slices[11].qf
+
+#print Slices[10].qf
+"""
+for i in xrange(len(Slices)):
+    Mz = FP.Mz(Slices[i].z, yBar) - Slices[i].qs0I/2*Inputs.AreaI - Slices[i].qs0II/2*Inputs.AreaII
+    SP.TorqueShearFlow(Slices[i],LengthBetween2Booms,Mz)
+    
+print Slices[11].qT1, Slices[11].qT2
+print Slices[11].qs0I*2*Inputs.AreaI, Slices[11].qs0II*2*Inputs.AreaII
+print Slices[11].qT1*2*Inputs.AreaI + Slices[11].qT2*2*Inputs.AreaII + Slices[11].qs0I*2*Inputs.AreaI + Slices[11].qs0II*2*Inputs.AreaII
+print FP.Mz(Slices[11].z, 0.)
+    
     
 ### Collecting Results
 MaxSF1 = 0.
@@ -126,21 +158,22 @@ ydot = []
 B = []
 z = 16
 sigmatest =[]
-for z in range(nSlices):
-    for j in range(36):
-        sigmatest.append(Slices[z].booms[j].sigma)
-        B.append(abs((Slices[z].booms[j].boomArea))*10**5)
-        xdot.append(Slices[z].booms[j].x)
-        ydot.append(Slices[z].booms[j].y-yBar)
+#for z in range(nSlices):
+for j in range(36):
+    sigmatest.append(Slices[z].booms[j].sigma)
+    B.append(abs((Slices[z].booms[j].boomArea))*10**5)
+    xdot.append(Slices[z].booms[j].x)
+    ydot.append(Slices[z].booms[j].y-yBar)
 
 Bsum = []
 AreaDiff = []
-
+index = np.arange(0.,36.,1.)
 for n in xrange(nSlices):
     Bsum.append(sum(B[n:n+36])+Afloor)
     n = n + 35
 for m in xrange(len(Bsum)):
     AreaDiff.append(Bsum[m]-Asection)
+
 
 ###    
                     
@@ -148,9 +181,9 @@ for m in xrange(len(Bsum)):
 #plot section
 fig = plt.figure()
 ax = fig.add_subplot(111)
-for i,j,k in zip(xdot,ydot,B):
+for i,j,k in zip(xdot,ydot,index):
     ax.annotate(str(k),xy=(i,j))
 plt.scatter(xdot, ydot,s = B)
-plt.scatter(floorX, floorY)
+plt.scatter(flx, fly)
 plt.show()
 """

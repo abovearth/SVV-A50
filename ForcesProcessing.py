@@ -91,7 +91,7 @@ def Mz(z, ybar): #ybar needed for every slice?
         Mz = 0.
     elif L1 < z <= L2+L1:
         z = z - L1
-        Mz = Sx*(Inputs.dtaily-Inputs.R+ybar)-(Rx*(Inputs.dtgy+Inputs.R-ybar))
+        Mz = Sx*(Inputs.dtaily-Inputs.R+ybar)-(Rx*(Inputs.dtgy+Inputs.R-ybar)) #ybar or not
     elif L1+L2 < z <= L:
         z = z - (L2+L1)
         Mz = Sx*(Inputs.dtaily-Inputs.R+ybar)

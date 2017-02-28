@@ -25,3 +25,6 @@ class Inputs:
         self.dtgy = 1.9 #y-distance between bottom of the fuselage and the landing gear
         self.Sx = 1.6*10**5 #Lateral force on the tail
         self.W = 64000 #Design landing mass
+        self.IyyA = 0.1535701345
+        self.IxxA = 0.05142280605
+        self.IxyA = 0.0

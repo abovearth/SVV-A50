@@ -13,8 +13,9 @@ import StressProcessing as SP
 import matplotlib.pyplot as plt
 import numpy as np
 import testboxslice as TS
+from mpl_toolkits.mplot3d import Axes3D
 
-nSlices = 416
+nSlices = 50
 nFloor = 12
 nBooms = Inputs.ns
 zlist = []
@@ -119,18 +120,21 @@ while change<0.0001:
 
 #Shear Flow 
 for i in xrange(len(Slices)):
-    for j in xrange(len(Slices[i].booms)):
-        Sx = FP.Vx(Slices[i].z)
-        Sy = FP.Vy(Slices[i].z)
-        Mz = FP.Mz(Slices[i].z, yBar)
-        #qbi = SP.OpenSectionShearFlow(yBar,Sx,Sy,Slices[i])
-        #qs0i = SP.ClosedSectionShearFlow(Floorwidth,Slices[i],LengthBetween2Booms)
-    
-        SP.FloorShear(nFloor, Slices[i], Sx, Sy)
-        SP.OpenSectionShearFlow(Sx,Sy,Slices[i], Slices[i].Qxf, Slices[i].Qyf, yBar)  
-        #TS.OpenSectionShearFlow(Sx,Sy,Slices[i])        
-        SP.ClosedSectionShearFlow(nFloor,LengthBetween2Booms,Slices[i])
+    Sx = FP.Vx(Slices[i].z)
+    Sy = FP.Vy(Slices[i].z)
+    Mz = FP.Mz(Slices[i].z, yBar)
+    #qbi = SP.OpenSectionShearFlow(yBar,Sx,Sy,Slices[i])
+    #qs0i = SP.ClosedSectionShearFlow(Floorwidth,Slices[i],LengthBetween2Booms)
+
+    SP.FloorShear(nFloor, Slices[i], Sx, Sy)
+    SP.OpenSectionShearFlow(Sx,Sy,Slices[i], Slices[i].Qxf, Slices[i].Qyf, yBar)  
+    #TS.OpenSectionShearFlow(Sx,Sy,Slices[i])        
+    SP.ClosedSectionShearFlow(nFloor,LengthBetween2Booms,Slices[i])
+    print Slices[i].qs0I
+    SP.errorSHEAR(Slices[i],LengthBetween2Booms)
+    print Slices[i].qs0I
         
+    for j in xrange(len(Slices[i].booms)):
         if j<=19 or j>=35:
             Slices[i].booms[j].qs = Slices[i].booms[j].qb+Slices[i].qs0I
         if j <= 34 and j > 19:
@@ -171,8 +175,10 @@ print FP.Mz(Slices[t].z, 0.)
 for i in xrange(len(Slices)):
     for j in xrange(len(Slices[i].booms)):
         if j==19:
+            #print i,j,Slices[i].booms[j].qbnofloor
             Slices[i].booms[j].ShearStress = SP.ShearStress(Slices[i].booms[j].qbnofloor + Slices[i].qs0I,Inputs.tsSkin)
         if j==34:
+            print i,j,Slices[i].booms[j].qbnofloor
             Slices[i].booms[j].ShearStress = SP.ShearStress(Slices[i].booms[j].qbnofloor + Slices[i].qs0II,Inputs.tsSkin)        
         else:
             Slices[i].booms[j].ShearStress = SP.ShearStress(Slices[i].booms[j].qs,Inputs.tsSkin)
@@ -217,7 +223,7 @@ print "Maximum Stress Location: " + str(MaxStressLocation)
 xdot=[]
 ydot = []
 B = []
-z = 16
+z = 10
 sigmatest =[]
 #for z in range(nSlices):
 for j in range(36):
@@ -248,4 +254,28 @@ for i,j,k in zip(xdot,ydot,index):
     ax.annotate(str(k),xy=(i+0.03,j-0.075), color='b', size = '7')
 plt.scatter(xdot, ydot,s = B)
 plt.scatter(flx, fly)
+plt.show()
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+xs = []
+ys = []
+zs = []
+c = []
+for i in xrange (len(Slices)):
+    for j in xrange (len(Slices[i].booms)):
+        xs.append(Slices[i].booms[j].x)
+        ys.append(Slices[i].booms[j].y)
+        zs.append(Slices[i].booms[j].z)
+        c.append(Slices[i].booms[j].VonMises/MaxStress)
+    for k in xrange(len(Slices[i].qf)):   
+        xs.append(flx[k])
+        ys.append(Inputs.hf-Inputs.R)
+        zs.append(Slices[i].z)
+        c.append(Slices[i].VonMisesFloor[k]/MaxStress)
+ax.scatter(xs,zs,ys,c=c,cmap = plt.cm.get_cmap('jet'))
+ax.set_xlabel('x Label')
+ax.set_ylabel('z Label')
+ax.set_zlabel('y Label')
+
 plt.show()

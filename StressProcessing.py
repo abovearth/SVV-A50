@@ -15,49 +15,58 @@ def DirectStress(Mx,My,Ixx,Iyy,Ixy,x,y):
     sigmay = ((Mx*Iyy-My*Ixy)/(Ixx*Iyy-Ixy**2))*y
     return sigmax + sigmay
 
+def DirectStressSeparate(Mx,My,Ixx,Iyy,Ixy,x,y):
+    sigmax = ((My*Ixx-Mx*Ixy)/(Ixx*Iyy-Ixy**2))*x
+    sigmay = ((Mx*Iyy-My*Ixy)/(Ixx*Iyy-Ixy**2))*y
+    return sigmax, sigmay
+
 def FloorShear(nFloor, Slice, Sx, Sy):
     floorsection =  Inputs.Floorwidth/nFloor
     Slice.qf=[]
     for i in xrange(nFloor):       
         FloorX = ((-Inputs.Floorwidth/2+floorsection*i)+floorsection/2)
         FloorY = -Inputs.R-Inputs.hf
-        Slice.Qxf = (Inputs.tsFloor*2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2)*FloorX)#symmetry
-        Slice.Qyf = Inputs.tsFloor*2*math.sqrt(Inputs.R**2+(Inputs.R-Inputs.hf)**2)*FloorY
-        Slice.qf.append(-((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(-1*Slice.Qxf)-((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(-1*Slice.Qyf))
-    
-def OpenSectionShearFlow(Sx,Sy,Slice, Qxf, Qyf):    
+        Slice.Qxf = Inputs.Floorwidth*Inputs.tsFloor*FloorX#symmetry
+        Slice.Qyf = Inputs.Floorwidth*Inputs.tsFloor*FloorY
+        Slice.qf.append(-((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qxf)-((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qyf))
+        
+def OpenSectionShearFlow(Sx,Sy,Slice, Qxf, Qyf, yBar):    
     BoomAreaTimesX1 = 0.
     BoomAreaTimesY1 = 0.
     BoomAreaTimesX2 = 0.
     BoomAreaTimesY2 = 0.
+
     for j in xrange(len(Slice.booms)):#upper cell
         if j<=19 or j>=35:
             BoomAreaTimesX1 += Slice.booms[j].boomArea*Slice.booms[j].x
-            BoomAreaTimesY1 += Slice.booms[j].boomArea*Slice.booms[j].y
-            if j<19:
+            BoomAreaTimesY1 += Slice.booms[j].boomArea*(Slice.booms[j].y)
+            if j >= 0 and j <= 18:
                 Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX1) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY1)
             elif j==19: 
-                Slice.booms[j].qb = (-((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qxf + BoomAreaTimesX1) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qyf + BoomAreaTimesY1))
+                Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qxf + BoomAreaTimesX1) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qyf + BoomAreaTimesY1)
+                Slice.booms[j].qbnofloor = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX1) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY1)
             if j==35:
                 Slice.booms[j].qb = 0.#cut
             #Slice.booms[19].qb
-        if j<=34 and j > 19:
+        if j <= 34 and j > 19:
             BoomAreaTimesX2 += Slice.booms[j].boomArea*Slice.booms[j].x
-            BoomAreaTimesY2 += Slice.booms[j].boomArea*Slice.booms[j].y
+            BoomAreaTimesY2 += Slice.booms[j].boomArea*(Slice.booms[j].y)
             if j == 20:
-                 Slice.booms[j].qb = 0.#cut
-            elif j > 20 and j < 34:
+                Slice.booms[j].qb = 0.#cut
+            elif j>= 21 and j <= 33:
                 Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX2) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY2)
             elif j == 34:
-              Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qxf + BoomAreaTimesX2) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(Slice.Qyf + BoomAreaTimesY2)  
+                Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(-Slice.Qxf + BoomAreaTimesX2) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(-Slice.Qyf + BoomAreaTimesY2)  
+                Slice.booms[j].qbnofloor = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX1) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY1)
             
+           
 def ClosedSectionShearFlow(nFloor, LengthBetween2Booms, Slice):
     floorsection =  Inputs.Floorwidth/nFloor
     for i in xrange(nFloor):     
             FloorX = ((-Inputs.Floorwidth/2+floorsection*i)+floorsection/2)
             FloorY = -Inputs.R-Inputs.hf
             qf = (math.sqrt(FloorX**2+FloorY**2)*Slice.qf[i]*floorsection)
-    for j in xrange(len(Slice.booms)):    
+    for j in xrange(len(Slice.booms)): 
         Slice.qs0I = ((Inputs.R * Slice.booms[j].qb * LengthBetween2Booms) + qf)/(-2*Inputs.AreaI) 
         Slice.qs0II = ((Inputs.R * Slice.booms[j].qb * LengthBetween2Booms) - qf)/(-2*Inputs.AreaII)
 
@@ -79,11 +88,12 @@ def TorqueShearFlow(Slice,LengthBetween2Booms,Mz):
     #Jfloor is take twice -> torque higher?
     JsumI  = 22*J + Jfloor
     JsumII = 14*J +Jfloor
-    print JsumI, JsumII
+    #print JsumI, JsumII
     T1 = Mz/(1. + JsumII/JsumI)
     T2 = Mz - T1
     Slice.qT1 = T1/(2*Inputs.AreaI)
     Slice.qT2 = T2/(2*Inputs.AreaII)
+
 def errorSHEAR():
     #for j in xrange(len(Slice.booms)):
     #    if j<10 or j>=25:
@@ -138,5 +148,5 @@ def errorSHEAR():
 def ShearStress(qs,t):
     return qs/t
     
-def TotalStress():
-    return 0
+def VonMises(sigmax,sigmay,shearxy):
+    return math.sqrt(1/2*((sigmax-sigmay)**2)+3*shearxy**2)

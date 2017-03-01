@@ -27,4 +27,4 @@ def readfile(filename):
         y.append(l[2])
         z.append(l[3])
         vm.append(l[4])
-        return x, y, z, vm
+    return x, y, z, vm

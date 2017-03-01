@@ -7,6 +7,8 @@ Created on Wed Feb 22 10:40:29 2017
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import inputs
+Inputs = inputs.Inputs()
 
 g = 9.81
 m = 64000.0
@@ -78,36 +80,43 @@ for z in zrange:
         My3 = -(Sx - Fx)+((Sx-Fx)/L3)*z
         Vx.append(Vx3)
         My.append(My3)
-#T = Sx * dy_from the centroid
-#dy_centroid needed to finish this!        
-#for z in zrange:
-#    if z <= L1:
-#        Mz1 = 0.
-#        Mz.append(Mz1)
-#    elif L1 < z <= L2+L1:
-#        z = z - L1
-#        Mz2 = 
-#    elif L1+L2 < z <= L:
-#        z = z - (L2+L1) 
+for z in zrange: #ybar needed for every slice?
+    ybar = 395.52*10**-3
+    if z <= L1:
+        Mz1 = 0.
+        Mz.append(Mz1)
+    elif L1 < z <= L2+L1:
+        z = z - L1
+        Mz2 = Sx*(Inputs.dtaily-Inputs.R+ybar)-(Rx*(Inputs.dtgy+Inputs.R-ybar)) #ybar or not
+        Mz.append(Mz2)
+    elif L1+L2 < z <= L:
+        z = z - (L2+L1)
+        Mz3 = Sx*(Inputs.dtaily-Inputs.R+ybar)
+        Mz.append(Mz3)
+
         
         
-""""""
+
 #plot section
-plt.subplot(221)
+plt.subplot(232)
 plt.title("Vy")
 plt.plot(zrange, Vy)
 
-plt.subplot(222)
+plt.subplot(234)
 plt.title("Mx")
 plt.plot(zrange, Mx)
 
-plt.subplot(223)
+plt.subplot(231)
 plt.title("Vx")
 plt.plot(zrange, Vx)
 
-plt.subplot(224)
+plt.subplot(235)
 plt.title("My")
 plt.plot(zrange, My)
+
+plt.subplot(236)
+plt.title("Mz")
+plt.plot(zrange, Mz)
 
 plt.show()
 """"""

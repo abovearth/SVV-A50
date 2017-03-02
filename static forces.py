@@ -98,23 +98,31 @@ for z in zrange: #ybar needed for every slice?
         
 
 #plot section
-plt.subplot(232)
+plt.subplot(111)
 plt.title("Vy")
 plt.plot(zrange, Vy)
 
-plt.subplot(234)
+plt.show()
+
+plt.subplot(111)
 plt.title("Mx")
 plt.plot(zrange, Mx)
 
-plt.subplot(231)
+plt.show()
+
+plt.subplot(111)
 plt.title("Vx")
 plt.plot(zrange, Vx)
 
-plt.subplot(235)
+plt.show()
+
+plt.subplot(111)
 plt.title("My")
 plt.plot(zrange, My)
 
-plt.subplot(236)
+plt.show()
+
+plt.subplot(111)
 plt.title("Mz")
 plt.plot(zrange, Mz)
 

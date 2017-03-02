@@ -15,6 +15,11 @@ def DirectStress(Mx,My,Ixx,Iyy,Ixy,x,y):
     sigmay = ((Mx*Iyy-My*Ixy)/(Ixx*Iyy-Ixy**2))*y
     return sigmax + sigmay
 
+def DirectStressSeparate(Mx,My,Ixx,Iyy,Ixy,x,y):
+    sigmax = ((My*Ixx-Mx*Ixy)/(Ixx*Iyy-Ixy**2))*x
+    sigmay = ((Mx*Iyy-My*Ixy)/(Ixx*Iyy-Ixy**2))*y
+    return sigmax, sigmay
+
 def FloorShear(nFloor, Slice, Sx, Sy):
     floorsection =  Inputs.Floorwidth/nFloor
     Slice.qf = []
@@ -36,6 +41,7 @@ def OpenSectionShearFlow(Sx,Sy,Slice, yBar, nFloor):
         #if j<=19:
         BoomAreaTimesX1 += Slice.booms[j].boomArea*Slice.booms[j].x
         BoomAreaTimesY1 += Slice.booms[j].boomArea*(Slice.booms[j].y)
+        
             #if j >= 0 and j <= 19:
         Slice.booms[j].qb = -((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesX1) -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*(BoomAreaTimesY1)
     
@@ -56,6 +62,8 @@ def OpenSectionShearFlow(Sx,Sy,Slice, yBar, nFloor):
             
 
     #print Slice.qf[0]
+    BoomAreaTimesX1 = 0.
+    BoomAreaTimesY1 = 0.
     for j in range(32,19,-1):
         BoomAreaTimesX1 += Slice.booms[j].boomArea*Slice.booms[j].x
         BoomAreaTimesY1 += Slice.booms[j].boomArea*Slice.booms[j].y
@@ -63,10 +71,11 @@ def OpenSectionShearFlow(Sx,Sy,Slice, yBar, nFloor):
     Slice.booms[35].qb = 0.0
     Slice.booms[33].qb = 0.0 
     for j in xrange(nFloor):
-        if j == 0:
-            Slice.qf[0] = Slice.qf[0] - Slice.booms[19].qb + Slice.booms[20].qb
-        if j > 0:
-            Slice.qf[j] = Slice.qf[j-1] + Slice.qf[j]  
+        #if j == 0:
+        Slice.qf[j] = Slice.qf[j] - Slice.booms[19].qb + Slice.booms[20].qb
+        #if j > 0:
+        #    Slice.qf[j] = Slice.qf[j-1] + Slice.qf[j]  
+    #print Slice.qf
     Slice.booms[34].qb = Slice.qf[-1]-((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*Slice.booms[j].boomArea*Slice.booms[j].x -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*Slice.booms[j].boomArea*Slice.booms[j].y
 """
 """           
@@ -104,48 +113,101 @@ def TorqueShearFlow(Slice,LengthBetween2Booms,Mz):
     Slice.qT1 = T1/(2*Inputs.AreaI)
     Slice.qT2 = T2/(2*Inputs.AreaII)
 
-def errorSHEAR():
-    #for j in xrange(len(Slice.booms)):
-    #    if j<10 or j>=25:
-    #        openSectionIntegralI += Slice.booms[j].qb*LengthBetween2Booms/Inputs.tsSkin
-    #    elif j==10:
-    #        openSectionIntegralI += Slice.booms[j].qb* (2*Inputs.R * ((math.asin(Inputs.hf/Inputs.R)) %(10./180.*math.pi)) /Inputs.tsSkin + FloorWidth/Inputs.tsFloor) #10./180.*math.pi = 10 degrees in radians
-    #    elif j>=11 and j<24:
-    #        openSectionIntegralII += Slice.booms[j].qb*LengthBetween2Booms/Inputs.tsSkin
-    #    elif j==24:
-    #        openSectionIntegralII += Slice.booms[j].qb* (2*Inputs.R * (10./180.*math.pi - (math.asin(Inputs.hf/Inputs.R)) %(10./180.*math.pi)) /Inputs.tsSkin + FloorWidth/Inputs.tsFloor)
+def errorSHEAR(Slice,LengthBetween2Booms):
+
+    theta = Inputs.theta
+
+    totalArea = math.pi*Inputs.R**2
+
+    AreaI  = (Inputs.R**2)/2 *(theta - math.sin(theta))
+
+    AreaII = totalArea - AreaI
+
+    deltaFloor = Inputs.Floorwidth/Inputs.tsFloor
+
+    deltaI  = deltaFloor + Inputs.R * (180./math.pi+2*math.asin(Inputs.hf/Inputs.R))/Inputs.tsFloor
+
+    deltaII = deltaFloor + Inputs.R * (180./math.pi-2*math.asin(Inputs.hf/Inputs.R))/Inputs.tsFloor
+
     
-    cellIopensectionmoment  = 0.
-    cellIIopensectionmoment = 0.
-    xBarFloor = 0.
-    yBarFloor = Inputs.R-Inputs.hf
+
+    openSectionIntegralI = 0.
+
+    openSectionIntegralII = 0.
+
     for j in xrange(len(Slice.booms)):
-        if j<10 or j>=25:
+
+        if j<19 or j>=35:
+
+            openSectionIntegralI += Slice.booms[j].qb*LengthBetween2Booms/Inputs.tsSkin
+
+        elif j==19:
+
+            openSectionIntegralI += Slice.booms[j].qb* (2*Inputs.R * ((math.asin(Inputs.hf/Inputs.R)) %(10./180.*math.pi)) /Inputs.tsSkin + Inputs.Floorwidth/Inputs.tsFloor) #10./180.*math.pi = 10 degrees in radians
+
+        elif j>=20 and j<34:
+
+            openSectionIntegralII += Slice.booms[j].qb*LengthBetween2Booms/Inputs.tsSkin
+
+        elif j==34:
+
+            openSectionIntegralII += Slice.booms[j].qb* (2*Inputs.R * (10./180.*math.pi - (math.asin(Inputs.hf/Inputs.R)) %(10./180.*math.pi)) /Inputs.tsSkin + Inputs.Floorwidth/Inputs.tsFloor)
+
+    
+
+    cellIopensectionmoment  = 0.
+
+    cellIIopensectionmoment = 0.
+
+    xBarFloor = 0.
+
+    yBarFloor = Inputs.R-Inputs.hf
+
+    for j in xrange(len(Slice.booms)):
+
+        if j<19 or j>=35:
+
             cellIopensectionmoment += Slice.booms[j].qb * math.sqrt( ((Slice.booms[j].x + Slice.booms[(j+1)%len(Slice.booms)].x)/2-Slice.xBar)**2 + ((Slice.booms[j].y + Slice.booms[(j+1)%len(Slice.booms)].y)/2-Slice.yBar)**2 )
-        elif j==10:
+
+        elif j==19:
+
             cellIopensectionmoment += Slice.booms[j].qb * math.sqrt( (xBarFloor-Slice.xBar)**2 + (yBarFloor-Slice.yBar)**2 ) #assumption that the contribution of the 2* 6.6 degrees of skin to the ybar are negligible, and i'm too lazy
-        elif j>=11 and j<24:
+
+        elif j>=20 and j<34:
+
             cellIIopensectionmoment += Slice.booms[j].qb * math.sqrt( ((Slice.booms[j].x + Slice.booms[(j+1)%len(Slice.booms)].x)/2-Slice.xBar)**2 + ((Slice.booms[j].y + Slice.booms[(j+1)%len(Slice.booms)].y)/2-Slice.yBar)**2 )
-        elif j==24:
+
+        elif j==34:
+
             cellIIopensectionmoment += Slice.booms[j].qb * math.sqrt( (xBarFloor-Slice.xBar)**2 + (yBarFloor-Slice.yBar)**2 ) #assumption that the contribution of the 2* 3.4 degrees of skin to the ybar are negligible, and i'm too lazy
+
     
+
     """
+
     rateOfTwistI  = 1./(2.*AreaI *Gref)*(-1.*qs0II*deltaFloor+qs0I *deltaI +openSectionIntegralI )
+
     rateOfTwistII = 1./(2.*AreaII*Gref)*(-1.*qs0I *deltaFloor+qs0II*deltaII+openSectionIntegralII)    
+
     0. = cellIopensectionmoment + cellIIopensectionmoment + 2*AreaI *qs0I + 2*AreaII*qs0II
+
     """
+
     #qs0I = (cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI)
+
     #rateOfTwistII = 1./(2.*AreaII*Gref)*(-1.*(cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI) *deltaFloor+qs0II*deltaII+openSectionIntegralII)    
+
     #1./(2.*AreaI *Gref)*(-1.*qs0II*deltaFloor+(cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI) *deltaI +openSectionIntegralI ) = 1./(2.*AreaII*Gref)*(-1.*(cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI) *deltaFloor+qs0II*deltaII+openSectionIntegralII)    
-    qs0II = ((cellIopensectionmoment + cellIIopensectionmoment)*(-deltaI/(2*AreaI) - deltaFloor/(2*AreaII)) + AreaI/AreaII*openSectionIntegralI - openSectionIntegralII)/(AreaII/AreaI*deltaI - AreaI/AreaII*deltaII)
-    qs0I = (cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI)
-    
+
+    Slice.qs0II = ((cellIopensectionmoment + cellIIopensectionmoment)*(-deltaI/(2*AreaI) - deltaFloor/(2*AreaII)) + AreaI/AreaII*openSectionIntegralI - openSectionIntegralII)/(AreaII/AreaI*deltaI - AreaI/AreaII*deltaII)
+
+    Slice.qs0I = (cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*Slice.qs0II)/(2*AreaI)    
     #totalShearFlow
     for j in xrange(len(Slice.booms)):
-        if j<=10 or j>=25:
-            Slice.booms[j].qs = Slice.booms[j].qb + qs0I 
-        elif j>=11 and j<=24:
-            Slice.booms[j].qs = Slice.booms[j].qb + qs0II
+        if j<=19 or j>=35:
+            Slice.booms[j].qs = Slice.booms[j].qb + Slice.qs0I 
+        elif j>=20 and j<=34:
+            Slice.booms[j].qs = Slice.booms[j].qb + Slice.qs0II
         #print "Slice (z = " + str(Slice.z) + "), Boom (j = " + str (j) + ") qs = " + str(Slice.booms[j].qs)
             
     #check for the difference between integral of qs*dy and Vy
@@ -158,5 +220,6 @@ def errorSHEAR():
 def ShearStress(qs,t):
     return qs/t
     
-def TotalStress():
-    return 0
+def VonMises(sigmax,sigmay,shearxy):
+
+    return math.sqrt(1/2*((sigmax-sigmay)**2+sigmax**2+sigmay**2)+3*shearxy**2)

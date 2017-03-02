@@ -13,17 +13,27 @@ import StressProcessing as SP
 import matplotlib.pyplot as plt
 import numpy as np
 #import testboxslice as TS
+from mpl_toolkits.mplot3d import Axes3D
+from readfile import readfile
 
-nSlices = 50
-nFloor = 10
+nSlices = 288
+nFloor = 12
 nBooms = Inputs.ns
 zlist = []
 ###Discretization
 Slices = []
+
 for i in xrange(nSlices):
     z=i*Inputs.L/nSlices
     Slices.append(GP.Slice(z))
     zlist.append(z)
+    
+z=Inputs.Lf1
+Slices.append(GP.Slice(z))
+zlist.append(z)
+z=Inputs.Lf1+Inputs.Lf2
+Slices.append(GP.Slice(z))
+zlist.append(z)
 """
 Slices.append(TS.TestSlice())
 for i in xrange(len(Slices)):
@@ -65,7 +75,9 @@ for i in xrange(len(Slices)):
                
     #Floor stress (floor is 'disretized' into n sections of a thick slab, each carrying individual normal stress
     flx = []
-    fly = []           
+    fly = []
+    Slices[i].FloorSigmaX=[]
+    Slices[i].FloorSigmaY=[]         
     floorsection =  Inputs.Floorwidth/nFloor
     for k in xrange(nFloor):
         Mx = FP.Mx(Slices[i].z)
@@ -73,7 +85,9 @@ for i in xrange(len(Slices)):
         IxyFloor = 0.
         FloorX = ((-Inputs.Floorwidth/2+floorsection*k)+floorsection/2)
         FloorY = (-(Inputs.R-Inputs.hf+yBar))
-        floorStress = SP.DirectStress(Mx,My,Ixx,IyyFloor,IxyFloor,FloorX,FloorY)
+        floorStress = SP.DirectStressSeparate(Mx,My,Ixx,IyyFloor,IxyFloor,FloorX,FloorY)
+        Slices[i].FloorSigmaX.append(floorStress[0])
+        Slices[i].FloorSigmaY.append(floorStress[1])
         flx.append(FloorX)
         fly.append(FloorY)
            
@@ -108,6 +122,9 @@ while change<0.0001:
         Ixy = Slices[i].Ixy
         for j in xrange(len(Slices[i].booms)):
             Slices[i].booms[j].sigma = SP.DirectStress(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,(Slices[i].booms[j].y-Slices[i].yBar))
+            Slices[i].booms[j].sigmax = SP.DirectStressSeparate(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,(Slices[i].booms[j].y-Slices[i].yBar))[0]
+            Slices[i].booms[j].sigmay = SP.DirectStressSeparate(Mx,My,Ixx,Iyy,Ixy,Slices[i].booms[j].x,(Slices[i].booms[j].y-Slices[i].yBar))[1]
+
         #End of Feedback Loop
 
 #Shear Flow 
@@ -115,54 +132,55 @@ for i in xrange(len(Slices)):
     Sx = FP.Vx(Slices[i].z)
     Sy = FP.Vy(Slices[i].z)
     Mz = FP.Mz(Slices[i].z, yBar)
-    SP.FloorShear(nFloor, Slices[i], Sx, Sy)        
+    SP.FloorShear(nFloor, Slices[i], 0., Sy)        
     #qbi = SP.OpenSectionShearFlow(yBar,Sx,Sy,Slices[i])
     #qs0i = SP.ClosedSectionShearFlow(Floorwidth,Slices[i],LengthBetween2Booms)
 
     
-    if i == 15:
-        print
-        print Slices[i].qf
-    SP.OpenSectionShearFlow(Sx,Sy,Slices[i], yBar, nFloor)
-    if i == 15:
-        print
-        print Slices[i].qf
+    #if i == 15:
+        #print
+        #print Slices[i].qf
+    SP.OpenSectionShearFlow(0.,Sy,Slices[i], yBar, nFloor)
+    #if i == 15:
+        #print
+        #print Slices[i].qf
     #TS.OpenSectionShearFlow(Sx,Sy,Slices[i])        
     #SP.ClosedSectionShearFlow(nFloor,LengthBetween2Booms,Slices[i])
     #SP.TorqueShearFlow(Slices[i],LengthBetween2Booms,Mz)
-
+    SP.errorSHEAR(Slices[i],LengthBetween2Booms)
 
 
 ###Shear validation
-t = 5
-qb =[]      
-qy = []
-qx = []
-qfloor = Slices[t].qf
+qbdy = []
+qbdx = []
+for t in xrange(len(Slices)):
+    qb =[]      
+    qy = []
+    qx = []
+    qfloor = Slices[t].qf
 
-
-
-for j in xrange(len(Slices[t].booms)):
+    for j in xrange(len(Slices[t].booms)):
         qb.append(Slices[t].booms[j].qb)
         qy.append(Slices[t].booms[j].qb * abs((Slices[t].booms[j].y)-Slices[t].booms[j-1].y))
         qx.append(Slices[t].booms[j].qb * abs((Slices[t].booms[j].x)-Slices[t].booms[j-1].x))
-
-for i in range(len(qb)):
-    if i <=19:
-        if qb[i] - qb[i-1] < 0:
-            qb[i] = -1 * qb[i]
-            
-        
-"""
-qs0 =[]
-for j in xrange(len(Slices[t].booms)):
-    if j<=19 or j>=35:
-        qs0.append(Slices[t].booms[j].qb+Slices[t].qs0I+Slices[t].qT1)
-    if j <= 34 and j > 19:
-        qs0.append(Slices[t].booms[j].qb+Slices[t].qs0II+Slices[t].qT2)
-"""
+    qbdy.append(sum(qy)+sum(qfloor)*Inputs.tsFloor)
+    qbdx.append(sum(qx)+sum(qfloor)*Inputs.tsFloor)
+    """for i in range(len(qb)):
+        if i <=19:
+            if qb[i] - qb[i-1] < 0:
+                qb[i] = -1 * qb[i]
+                
+            """
+    """
+    qs0 =[]
+    for j in xrange(len(Slices[t].booms)):
+        if j<=19 or j>=35:
+            qs0.append(Slices[t].booms[j].qb+Slices[t].qs0I+Slices[t].qT1)
+        if j <= 34 and j > 19:
+            qs0.append(Slices[t].booms[j].qb+Slices[t].qs0II+Slices[t].qT2)
+    """
     
-#print Slices[t].qs0I, Slices[t].qs0II 
+    #print Slices[t].qs0I, Slices[t].qs0II 
 print "qb*dy:" + str(sum(qy)+sum(qfloor)*Inputs.tsFloor)
 print "qb*dx:" + str(sum(qx)+sum(qfloor)*Inputs.Floorwidth)
 print "____"
@@ -184,14 +202,76 @@ print Slices[t].qT1*2*Inputs.AreaI + Slices[t].qT2*2*Inputs.AreaII + Slices[t].q
 print FP.Mz(Slices[t].z, 0.)
      
 """    
+##ShearStress at every location  
 
+for i in xrange(len(Slices)):
+
+    for j in xrange(len(Slices[i].booms)):
+
+        Slices[i].booms[j].ShearStress = SP.ShearStress(Slices[i].booms[j].qs,Inputs.tsSkin)
+
+    Slices[i].ShearStressFloor = []
+
+    for k in xrange(len(Slices[i].qf)):
+
+        Slices[i].ShearStressFloor.append(SP.ShearStress(Slices[i].qf[k],Inputs.tsFloor))
+
+
+
+##Total Stress at every location 
+
+MaxStress  = 0.0
+
+MaxStressLocation = (0.,0.,0.)
+
+for i in xrange(len(Slices)):
+
+    for j in xrange(len(Slices[i].booms)):
+
+        Slices[i].booms[j].VonMises = SP.VonMises(Slices[i].booms[j].sigmax, Slices[i].booms[j].sigmay, Slices[i].booms[j].ShearStress)
+
+        if Slices[i].booms[j].VonMises>MaxStress:
+
+             MaxStress = Slices[i].booms[j].VonMises
+
+             MaxStressLocation = (Slices[i].booms[j].x,Slices[i].booms[j].y,Slices[i].booms[j].z)
+
+             #print "last change in boom of maxstress at ",i,j,MaxStress,Slices[i].booms[j].sigmax, Slices[i].booms[j].sigmay, Slices[i].booms[j].ShearStress
 
     
+
+    Slices[i].VonMisesFloor = []
+
+    for k in xrange(len(Slices[i].qf)):
+
+        VonMisesFloor = SP.VonMises(Slices[i].FloorSigmaX[k], Slices[i].FloorSigmaY[k],Slices[i].ShearStressFloor[k])
+
+        Slices[i].VonMisesFloor.append(VonMisesFloor)
+
+        if VonMisesFloor>MaxStress:
+
+             MaxStress = VonMisesFloor
+
+             MaxStressLocation = (flx[k],Inputs.hf-Inputs.R,Slices[i].z)
+
+             print "last change in floor of maxstress at ",i,j
+           
+        
 ### Collecting Results
 MaxSF1 = 0.
 MaxSF2 = 0.
-MaxStress = 0.
-MaxStressLocation = (0.,0.,0.)
+
+for i in range(len(Slices)):
+    if Slices[i].z == Inputs.Lf1:
+        for j in range(len (Slices[i].booms)):
+            if abs(Slices[i].booms[j].qs)> abs(MaxSF1):
+                MaxSF1 = Slices[i].booms[j].qs
+    if Slices[i].z == Inputs.Lf1+Inputs.Lf2:
+        for j in range(len (Slices[i].booms)):
+            if abs(Slices[i].booms[j].qs)> abs(MaxSF2):
+                MaxSF2 = Slices[i].booms[j].qs
+#MaxStress = 0.
+#MaxStressLocation = (0.,0.,0.)
 print "Maximum Shear Flow in Frame 1 at 5 m: " + str(MaxSF1)
 print "Maximum Shear Flow in Frame 2 at 14.6 m: " + str(MaxSF2)
 print "Maximum Stress: " + str(MaxStress)
@@ -204,7 +284,7 @@ print "Maximum Stress Location: " + str(MaxStressLocation)
 xdot=[]
 ydot = []
 B = []
-z = 16
+z = 0
 sigmatest =[]
 #for z in range(nSlices):
 for j in range(36):
@@ -237,4 +317,103 @@ for i,j,k in zip(flx, fly, qfloor):
     ax.annotate(str(k),xy=(i,j+0.1), color='red', size = '10')
 plt.scatter(xdot, ydot,s = B)
 plt.scatter(flx, fly)
+plt.show()
+
+fig = plt.figure()
+zrange = range(len(Slices))
+
+ax = fig.add_subplot(211)
+plt.plot(zrange,qbdx)
+Vxplot = []
+for z in zrange:
+    Vxplot.append(FP.Vx(Slices[z].z))
+plt.plot(zrange,Vxplot)
+plt.title = "Vx vs qbdx"
+
+ax = fig.add_subplot(212)
+plt.plot(zrange,qbdy)
+Vyplot = []
+for z in zrange:
+    Vyplot.append(FP.Vy(Slices[z].z))
+plt.plot(zrange,Vyplot)
+plt.title = "Vy vs qbdy"
+plt.show()
+fig = plt.figure()
+
+ax = fig.add_subplot(111, projection='3d')
+
+xs = []
+
+ys = []
+
+zs = []
+
+c = []
+
+for i in xrange (len(Slices)):
+
+    for j in xrange (len(Slices[i].booms)):
+
+        xs.append(Slices[i].booms[j].x)
+
+        ys.append(Slices[i].booms[j].y)
+
+        zs.append(Slices[i].booms[j].z)
+
+        c.append(Slices[i].booms[j].VonMises/MaxStress)
+
+    for k in xrange(len(Slices[i].qf)):   
+
+        xs.append(flx[k])
+
+        ys.append(Inputs.hf-Inputs.R)
+
+        zs.append(Slices[i].z)
+
+        c.append(Slices[i].VonMisesFloor[k]/MaxStress)
+
+ax.scatter(xs,zs,ys,c=c,cmap = plt.cm.get_cmap('jet'),marker = "d",edgecolors = 'face')
+
+ax.set_xlabel('x Label')
+
+ax.set_ylabel('z Label')
+
+ax.set_zlabel('y Label')
+
+
+
+plt.show()
+fig = plt.figure()
+
+ax = fig.add_subplot(111, projection='3d')
+
+xsfile,ysfile,zsfile,cfile = readfile("A320_I.txt")
+
+for vm in cfile:
+    vm=vm/max(cfile)
+
+
+
+ax.scatter(xsfile,zsfile,ysfile,c=cfile,cmap = plt.cm.get_cmap('jet'),marker = "d",edgecolors = 'face')
+
+ax.set_xlabel('x Label')
+
+ax.set_ylabel('z Label')
+
+ax.set_zlabel('y Label')
+
+
+
+plt.show()
+
+ax.scatter(xs,zs,ys,c=c,cmap = plt.cm.get_cmap('jet'),marker = "d",edgecolors = 'face')
+
+ax.set_xlabel('x Label')
+
+ax.set_ylabel('z Label')
+
+ax.set_zlabel('y Label')
+
+
+
 plt.show()

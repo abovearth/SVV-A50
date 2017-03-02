@@ -23,8 +23,8 @@ def readfile(filename):
         l = line.split()
         ldata.append(l)
     for l in ldata:       
-        x.append(l[2])
-        y.append(l[2])
-        z.append(l[3])
-        vm.append(l[4])
-        return x, y, z, vm
+        x.append(float(l[2]))
+        y.append(float(l[3]))
+        z.append(float(l[4]))
+        vm.append(float(l[5]))
+    return x, y, z, vm

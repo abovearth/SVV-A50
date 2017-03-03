@@ -15,9 +15,10 @@ import numpy as np
 #import testboxslice as TS
 from mpl_toolkits.mplot3d import Axes3D
 from readfile import readfile
+from writefile import writefile
 
 nSlices = 288
-nFloor = 12
+nFloor = 50
 nBooms = Inputs.ns
 zlist = []
 ###Discretization
@@ -32,6 +33,9 @@ z=Inputs.Lf1
 Slices.append(GP.Slice(z))
 zlist.append(z)
 z=Inputs.Lf1+Inputs.Lf2
+Slices.append(GP.Slice(z))
+zlist.append(z)
+z=34.-14.57805078
 Slices.append(GP.Slice(z))
 zlist.append(z)
 """
@@ -64,8 +68,10 @@ IxxRing = math.pi*Inputs.R**3*Inputs.tsSkin + 2*math.pi*Inputs.tsSkin*Inputs.R*(
 for i in xrange(len(Slices)):
     Mx = FP.Mx(Slices[i].z)
     My = FP.My(Slices[i].z)
-    Ixx = 0.144951214222284
-    Iyy = 0.262243038
+    Iyy =	0.1535701345
+    Ixx = 	0.051422806
+    #Ixx = 0.144951214222284
+    #Iyy = 0.262243038
     Ixy = 0.0
     #if i == 16:
         #for j in xrange(len(Slices[i].booms)):
@@ -85,7 +91,7 @@ for i in xrange(len(Slices)):
         IxyFloor = 0.
         FloorX = ((-Inputs.Floorwidth/2+floorsection*k)+floorsection/2)
         FloorY = (-(Inputs.R-Inputs.hf+yBar))
-        floorStress = SP.DirectStressSeparate(Mx,My,Ixx,IyyFloor,IxyFloor,FloorX,FloorY)
+        floorStress = SP.DirectStressSeparate(Mx,My,Ixx,Iyy,Ixy,FloorX,FloorY)
         Slices[i].FloorSigmaX.append(floorStress[0])
         Slices[i].FloorSigmaY.append(floorStress[1])
         flx.append(FloorX)
@@ -103,8 +109,9 @@ while change<0.0001:
         for j in xrange(len(Slices[i].booms)):
             Slices[i].booms[j].calculateBoomArea(Astringer,Slices[i].booms[j-1],Slices[i].booms[(j+1)%len(Slices[i].booms)],LengthBetween2Booms)
             #print Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea
-            if ( Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea)>change:
+            if abs( Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea)>change:
                 change =  abs(Slices[i].booms[j].previousBoomArea - Slices[i].booms[j].boomArea)
+                print change
             Slices[i].booms[j].previousBoomArea = Slices[i].booms[j].boomArea
     for i in xrange(len(Slices)):
         Slices[i].calculateXBar()
@@ -147,7 +154,7 @@ for i in xrange(len(Slices)):
     #TS.OpenSectionShearFlow(Sx,Sy,Slices[i])        
     #SP.ClosedSectionShearFlow(nFloor,LengthBetween2Booms,Slices[i])
     #SP.TorqueShearFlow(Slices[i],LengthBetween2Booms,Mz)
-    SP.errorSHEAR(Slices[i],LengthBetween2Booms)
+    SP.errorSHEAR(Slices[i],LengthBetween2Booms,Mz)
 
 
 ###Shear validation
@@ -203,23 +210,34 @@ print FP.Mz(Slices[t].z, 0.)
      
 """    
 ##ShearStress at every location  
-
+MaxShearStress = 0.
+MaxSigmaX = 0.
+MaxSigmaY = 0.
 for i in xrange(len(Slices)):
 
     for j in xrange(len(Slices[i].booms)):
 
         Slices[i].booms[j].ShearStress = SP.ShearStress(Slices[i].booms[j].qs,Inputs.tsSkin)
-
+        if Slices[i].booms[j].ShearStress>MaxShearStress:
+            MaxShearStress = Slices[i].booms[j].ShearStress
+        if Slices[i].booms[j].sigmax>MaxSigmaX:
+            MaxSigmaX = Slices[i].booms[j].sigmax
+        if Slices[i].booms[j].sigmay>MaxSigmaY:
+            MaxSigmaY = Slices[i].booms[j].sigmay
+            print "i",i,"j",j
     Slices[i].ShearStressFloor = []
 
     for k in xrange(len(Slices[i].qf)):
 
         Slices[i].ShearStressFloor.append(SP.ShearStress(Slices[i].qf[k],Inputs.tsFloor))
-
+        if Slices[i].FloorSigmaX[k]>MaxSigmaX:
+            MaxSigmaX = Slices[i].FloorSigmaX[k]
+        if Slices[i].FloorSigmaY[k]>MaxSigmaY:
+            MaxSigmaY = Slices[i].FloorSigmaY[k]
 
 
 ##Total Stress at every location 
-
+MinStress = 100000000000.
 MaxStress  = 0.0
 
 MaxStressLocation = (0.,0.,0.)
@@ -236,8 +254,9 @@ for i in xrange(len(Slices)):
 
              MaxStressLocation = (Slices[i].booms[j].x,Slices[i].booms[j].y,Slices[i].booms[j].z)
 
-             #print "last change in boom of maxstress at ",i,j,MaxStress,Slices[i].booms[j].sigmax, Slices[i].booms[j].sigmay, Slices[i].booms[j].ShearStress
+        if Slices[i].booms[j].VonMises<MinStress:
 
+             MinStress = Slices[i].booms[j].VonMises
     
 
     Slices[i].VonMisesFloor = []
@@ -247,20 +266,22 @@ for i in xrange(len(Slices)):
         VonMisesFloor = SP.VonMises(Slices[i].FloorSigmaX[k], Slices[i].FloorSigmaY[k],Slices[i].ShearStressFloor[k])
 
         Slices[i].VonMisesFloor.append(VonMisesFloor)
-
+        #print Slices[i].VonMisesFloor
         if VonMisesFloor>MaxStress:
 
              MaxStress = VonMisesFloor
 
              MaxStressLocation = (flx[k],Inputs.hf-Inputs.R,Slices[i].z)
 
-             print "last change in floor of maxstress at ",i,j
-           
+             #print "last change in floor of maxstress at ",i,j
+        if Slices[i].booms[j].VonMises<MinStress:
+
+             MinStress = Slices[i].booms[j].VonMises   
         
 ### Collecting Results
 MaxSF1 = 0.
 MaxSF2 = 0.
-
+print "Minimum Stress: ",MinStress
 for i in range(len(Slices)):
     if Slices[i].z == Inputs.Lf1:
         for j in range(len (Slices[i].booms)):
@@ -338,9 +359,27 @@ for z in zrange:
 plt.plot(zrange,Vyplot)
 plt.title = "Vy vs qbdy"
 plt.show()
-fig = plt.figure()
 
-ax = fig.add_subplot(111, projection='3d')
+fig = plt.figure()
+qs0Iplot=[]
+qs0IIplot=[]
+qbsumplot=[]
+Mzplot = []
+
+for z in zrange:
+    qs0Iplot.append(Slices[z].qs0I)
+    qs0IIplot.append(Slices[z].qs0II)
+    Mz=FP.Mz(z*Inputs.L/len(zrange),yBar)
+    Mzplot.append(Mz)
+    qbsum = 0.
+    for j in xrange(len(Slices[z].booms)):
+        qbsum +=Slices[z].booms[j].qb
+    qbsumplot.append(qbsum)
+plt.plot(zrange,qbsumplot)
+plt.plot(zrange,qs0Iplot)
+plt.plot(zrange,qs0IIplot)
+plt.plot(zrange,Mzplot)
+plt.show()
 
 xs = []
 
@@ -349,28 +388,45 @@ ys = []
 zs = []
 
 c = []
+cShear = []
+cSigmax = []
+cSigmay = []
 
 for i in xrange (len(Slices)):
 
     for j in xrange (len(Slices[i].booms)):
+        if j==340:
+            a=1
+        else:
+            xs.append(Slices[i].booms[j].x)
 
-        xs.append(Slices[i].booms[j].x)
+            ys.append(Slices[i].booms[j].y)
 
-        ys.append(Slices[i].booms[j].y)
+            zs.append(Slices[i].booms[j].z)
 
-        zs.append(Slices[i].booms[j].z)
-
-        c.append(Slices[i].booms[j].VonMises/MaxStress)
+            c.append(Slices[i].booms[j].VonMises/MaxStress)
+        
+            cShear.append(abs(Slices[i].booms[j].ShearStress)/MaxShearStress)
+            cSigmax.append(Slices[i].booms[j].sigmax/MaxSigmaX)
+            cSigmay.append(Slices[i].booms[j].sigmay/MaxSigmaY)
 
     for k in xrange(len(Slices[i].qf)):   
 
-        xs.append(flx[k])
+        xs.append(flx[k]+5)
 
         ys.append(Inputs.hf-Inputs.R)
 
         zs.append(Slices[i].z)
 
         c.append(Slices[i].VonMisesFloor[k]/MaxStress)
+        
+        cShear.append(abs(Slices[i].ShearStressFloor[k])/MaxShearStress)
+        cSigmax.append(Slices[i].FloorSigmaX[k]/MaxSigmaX)
+        cSigmay.append(Slices[i].FloorSigmaY[k]/MaxSigmaY)
+
+fig = plt.figure()
+
+ax = fig.add_subplot(111, projection='3d')
 
 ax.scatter(xs,zs,ys,c=c,cmap = plt.cm.get_cmap('jet'),marker = "d",edgecolors = 'face')
 
@@ -380,15 +436,56 @@ ax.set_ylabel('z Label')
 
 ax.set_zlabel('y Label')
 
+plt.show()
 
+fig = plt.figure()
+
+ax = fig.add_subplot(111, projection='3d')
+
+ax.scatter(xs,zs,ys,c=cShear,cmap = plt.cm.get_cmap('jet'),marker = "d",edgecolors = 'face')
+
+ax.set_xlabel('x Label')
+
+ax.set_ylabel('z Label')
+
+ax.set_zlabel('y Label')
 
 plt.show()
+
+fig = plt.figure()
+
+ax = fig.add_subplot(111, projection='3d')
+
+ax.scatter(xs,zs,ys,c=cSigmax,cmap = plt.cm.get_cmap('jet'),marker = "d",edgecolors = 'face')
+
+ax.set_xlabel('x Label')
+
+ax.set_ylabel('z Label')
+
+ax.set_zlabel('y Label')
+
+plt.show()
+
+fig = plt.figure()
+
+ax = fig.add_subplot(111, projection='3d')
+
+ax.scatter(xs,zs,ys,c=cSigmay,cmap = plt.cm.get_cmap('jet'),marker = "d",edgecolors = 'face')
+
+ax.set_xlabel('x Label')
+
+ax.set_ylabel('z Label')
+
+ax.set_zlabel('y Label')
+
+plt.show()
+
 fig = plt.figure()
 
 ax = fig.add_subplot(111, projection='3d')
 
 xsfile,ysfile,zsfile,cfile = readfile("A320_I.txt")
-
+#writefile("A320_I_sorted.txt",xsfile,ysfile,zsfile,cfile)
 for vm in cfile:
     vm=vm/max(cfile)
 

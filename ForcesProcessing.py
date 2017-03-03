@@ -87,6 +87,7 @@ def My(z):
     #FP.Mz(Slices[i].z,Slices[i].yBar)
 def Mz(z, ybar): #ybar needed for every slice?
     #ybar = 395.52*10**-3
+    Mz=0.
     if z <= L1:
         Mz = 0.
     elif L1 < z <= L2+L1:
@@ -96,3 +97,6 @@ def Mz(z, ybar): #ybar needed for every slice?
         z = z - (L2+L1)
         Mz = Sx*(Inputs.dtaily-Inputs.R+ybar)
     return Mz
+
+def ForcesAt(z):
+    return Vx(z),Vy(z),Mx(z),My(z)

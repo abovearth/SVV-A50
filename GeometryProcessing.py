@@ -54,7 +54,9 @@ class Slice:
         self.xBar = xBartemp/boomAreaSum
         
     def calculateYBar(self):
-        yBartemp = 0.
+        Astringer = Inputs.tst*(Inputs.wst+Inputs.hst) #thinwalled assumption
+        yBartemp = (-(Inputs.R-Inputs.hf)*Inputs.tsFloor*Inputs.Floorwidth)/(2*math.pi*Inputs.R*Inputs.tsSkin+Inputs.tsFloor*Inputs.Floorwidth+36*Astringer)
+
         boomAreaSum = 0.
         for i in xrange(len(self.booms)):
             yBartemp += self.booms[i].y*self.booms[i].boomArea

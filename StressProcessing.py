@@ -16,7 +16,7 @@ def DirectStress(Mx,My,Ixx,Iyy,Ixy,x,y):
     return sigmax + sigmay
 
 def DirectStressSeparate(Mx,My,Ixx,Iyy,Ixy,x,y):
-    sigmax = ((My*Ixx-Mx*Ixy)/(Ixx*Iyy-Ixy**2))*x
+    sigmax = ((My*Ixx-Mx*Ixy)/(Ixx*Iyy-Ixy**2))*x 
     sigmay = ((Mx*Iyy-My*Ixy)/(Ixx*Iyy-Ixy**2))*y
     return sigmax, sigmay
 
@@ -76,7 +76,10 @@ def OpenSectionShearFlow(Sx,Sy,Slice, yBar, nFloor):
         #if j > 0:
         #    Slice.qf[j] = Slice.qf[j-1] + Slice.qf[j]  
     #print Slice.qf
-    Slice.booms[34].qb = Slice.qf[-1]-((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*Slice.booms[j].boomArea*Slice.booms[j].x -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*Slice.booms[j].boomArea*Slice.booms[j].y
+    Slice.booms[34].qb = Slice.qf[-1]-((Sx*Slice.Ixx-Sy*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*Slice.booms[34].boomArea*Slice.booms[34].x -((Sy*Slice.Iyy-Sx*Slice.Ixy)/(Slice.Ixx*Slice.Iyy+Slice.Ixy**2))*Slice.booms[34].boomArea*Slice.booms[34].y
+    #for j in xrange(len(Slice.booms)):
+    #    Slice.booms[j].qb = Slice.booms[j].qb/2.
+    
 """
 """           
 def ClosedSectionShearFlow(nFloor, LengthBetween2Booms, Slice):
@@ -113,7 +116,7 @@ def TorqueShearFlow(Slice,LengthBetween2Booms,Mz):
     Slice.qT1 = T1/(2*Inputs.AreaI)
     Slice.qT2 = T2/(2*Inputs.AreaII)
 
-def errorSHEAR(Slice,LengthBetween2Booms):
+def errorSHEAR(Slice,LengthBetween2Booms,Mz):
 
     theta = Inputs.theta
 
@@ -199,9 +202,9 @@ def errorSHEAR(Slice,LengthBetween2Booms):
 
     #1./(2.*AreaI *Gref)*(-1.*qs0II*deltaFloor+(cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI) *deltaI +openSectionIntegralI ) = 1./(2.*AreaII*Gref)*(-1.*(cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*qs0II)/(2*AreaI) *deltaFloor+qs0II*deltaII+openSectionIntegralII)    
 
-    Slice.qs0II = ((cellIopensectionmoment + cellIIopensectionmoment)*(-deltaI/(2*AreaI) - deltaFloor/(2*AreaII)) + AreaI/AreaII*openSectionIntegralI - openSectionIntegralII)/(AreaII/AreaI*deltaI - AreaI/AreaII*deltaII)
+    Slice.qs0II = ((cellIopensectionmoment + cellIIopensectionmoment+Mz)*(-deltaI/(2*AreaI) - deltaFloor/(2*AreaII)) + AreaI/AreaII*openSectionIntegralI - openSectionIntegralII)/(AreaII/AreaI*deltaI - AreaI/AreaII*deltaII)
 
-    Slice.qs0I = (cellIopensectionmoment + cellIIopensectionmoment + 0. + 2*AreaII*Slice.qs0II)/(2*AreaI)    
+    Slice.qs0I = (cellIopensectionmoment + cellIIopensectionmoment + Mz + 2*AreaII*Slice.qs0II)/(2*AreaI)    
     #totalShearFlow
     for j in xrange(len(Slice.booms)):
         if j<=19 or j>=35:
